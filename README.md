@@ -4,7 +4,7 @@
 
 <p align="center">
   <strong>Your screen, anywhere on your LAN.</strong><br>
-  Use a modern browser as a low-latency display for your Windows PC over your local network.
+  Add a virtual Windows monitor and view it from any modern browser on your local network.
 </p>
 
 <p align="center">
@@ -17,9 +17,9 @@
 
 ## What is LANtern?
 
-LANtern is a Windows host application that streams a selected display to another device on the same local network. Viewing takes place directly in a modern web browser.
+LANtern turns a phone, tablet, laptop, or desktop browser into a dedicated display for a Windows PC. Its virtual display driver adds a real 1920x1080 monitor to Windows, which can be extended, arranged, and used like another screen. LANtern captures that monitor and delivers it to the browser through low-latency WebRTC video.
 
-The project is designed for **LAN-only** use. The current version focuses on local, view-only video streaming.
+An existing physical monitor can also be streamed when a virtual display is not needed. The viewing device requires no native application. LANtern is designed for **LAN-only**, view-only use on trusted private networks.
 
 > [!IMPORTANT]
 > LANtern is currently an alpha release intended for testing on trusted private networks. The installer contains a development-signed virtual display driver. Windows may display an unknown publisher or certificate warning.
@@ -40,6 +40,9 @@ The viewing device only needs a current web browser and access to the same priva
 
 ## Highlights
 
+- Adds a 1920x1080, 60 Hz virtual monitor to Windows
+- Extends the Windows desktop onto a browser device
+- Keeps the physical monitor free for other applications
 - Browser-based viewing with no client installation
 - Low-latency WebRTC video over the local network
 - H.264 hardware encoding with NVIDIA NVENC support
@@ -52,15 +55,27 @@ The viewing device only needs a current web browser and access to the same priva
 - Responsive mobile viewer with fullscreen support
 - Turkish and English control-panel interface
 - Windows system-tray controls
-- Optional 1920×1080 virtual monitor
+- Physical display streaming when a virtual monitor is not needed
 - Persistent streaming and startup settings
 - Automatic virtual-monitor connection and stream startup
 - Child-process cleanup for FFmpeg and MediaMTX
 
+## More than screen sharing
+
+Traditional screen-sharing tools mirror content that already exists on a physical display. LANtern can create an additional monitor inside Windows and stream that separate desktop area to another device.
+
+Windows applications can be moved to the LANtern virtual monitor while the primary display remains independent. This makes a browser device useful as a dedicated secondary screen for dashboards, communication tools, documents, media, or any other extended-desktop workflow.
+
 ## How it works
 
 ```text
-Windows display / LANtern virtual monitor
+     LANtern virtual display driver
+                  │
+                  ▼
+       Windows adds Display 2
+                  │
+                  ▼
+LANtern virtual monitor / physical display
                   │
                   ▼
         Desktop Duplication capture
@@ -86,7 +101,7 @@ The ASP.NET Core host serves the viewer and control panel on the local network. 
 |---|---|
 | View-only video streaming | System audio |
 | Physical display capture | Keyboard, mouse, and touch input forwarding |
-| Virtual 1080p display prototype | Internet access or cloud relay |
+| Virtual 1080p Windows display | Internet access or cloud relay |
 | Hardware H.264 encoding | TURN/STUN-based remote connectivity |
 | QR-based viewer access | Production-signed public driver package |
 | Tray, installer, and startup automation | Production code-signed installer |
@@ -158,16 +173,18 @@ The generated package is written to:
 artifacts\installer\LANtern-Setup-x64.exe
 ```
 
-## Virtual display
+## Virtual Windows monitor
 
-LANtern includes an Indirect Display Driver prototype based on Microsoft's Indirect Display sample architecture. Windows sees it as an additional 1920×1080, 60 Hz monitor:
+LANtern includes an Indirect Display Driver based on Microsoft's Indirect Display architecture. Windows sees it as an additional 1920x1080, 60 Hz monitor:
 
 ```text
 Display 1: Physical monitor
 Display 2: LANtern Virtual Monitor
 ```
 
-This makes it possible to extend the Windows desktop and stream a dedicated second display. The primary monitor can keep its original resolution and content.
+The Windows desktop can be extended onto this monitor just like a connected physical screen. LANtern then captures only the virtual monitor and sends it to the browser. The primary monitor keeps its own resolution, applications, and fullscreen content.
+
+The virtual monitor can be connected or disconnected from the control panel and tray menu. Startup settings can connect it automatically and begin streaming with the saved profile.
 
 Driver projects are available in `DisplayOnWeb.Drivers.slnx`. Development install and uninstall scripts are located under `scripts/`.
 
@@ -190,6 +207,12 @@ Opening the control panel at Windows startup is an optional setting and is disab
 - Virtual-display and persistent-setting endpoints accept requests only from loopback/localhost.
 - No TURN server, cloud relay, or public discovery service is configured.
 - The viewer is currently intended for trusted private networks; authentication/PIN support remains planned.
+
+## Official releases and forks
+
+Official LANtern releases are published only through the [VolkanDemir74/LANtern](https://github.com/VolkanDemir74/LANtern) repository. Release installers include a checksum file so downloaded packages can be verified.
+
+Forks and third-party builds are maintained independently. They are not reviewed, endorsed, signed, or supported by the LANtern project unless explicitly stated in this repository. Users should inspect the source and publisher before installing a driver or installer from another location.
 
 ## Project structure
 
@@ -240,7 +263,9 @@ Projenin geliştirme sürecindeki bazı çalışmalarda yapay zeka destekli ara�
 
 ## Türkçe kısa açıklama
 
-LANtern, Windows ekranını aynı yerel ağdaki modern tarayıcılara düşük gecikmeyle aktaran açık kaynak bir projedir. Telefon, tablet veya başka bir bilgisayara istemci uygulaması kurmak gerekmez. Proje yalnızca güvenilir yerel ağ kullanımı için tasarlanmıştır.
+LANtern, Windows'a 1920x1080 sanal bir monitör ekler ve bu monitörü aynı yerel ağdaki modern tarayıcılarda düşük gecikmeyle görüntüler. Böylece telefon, tablet veya başka bir bilgisayar yalnızca ekran yansıtmakla kalmaz, Windows'un bağımsız ikinci ekranı olarak kullanılabilir. İzleme cihazına uygulama kurulması gerekmez.
+
+İstenirse mevcut fiziksel monitörlerden biri de yayınlanabilir. LANtern yalnızca güvenilir yerel ağlarda, görüntüleme amaçlı kullanım için tasarlanmıştır.
 
 Geliştirme kurulumu, özellikler ve güvenlik ayrıntıları için yukarıdaki İngilizce belgelendirmeyi inceleyebilirsiniz. Türkçe arayüz uygulamanın yönetim panelinden seçilebilir.
 
