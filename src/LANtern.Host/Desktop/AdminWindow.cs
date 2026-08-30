@@ -51,7 +51,14 @@ public sealed class AdminWindow : Form
         if (_initialized) return;
         try
         {
-            await _browser.EnsureCoreWebView2Async();
+            var userDataFolder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "LANtern",
+                "WebView2");
+            Directory.CreateDirectory(userDataFolder);
+
+            var environment = await CoreWebView2Environment.CreateAsync(userDataFolder: userDataFolder);
+            await _browser.EnsureCoreWebView2Async(environment);
             _browser.CoreWebView2.Settings.AreDevToolsEnabled = false;
             _browser.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
             _browser.CoreWebView2.Settings.IsStatusBarEnabled = false;
@@ -62,6 +69,14 @@ public sealed class AdminWindow : Form
         {
             MessageBox.Show(
                 "Microsoft Edge WebView2 Runtime bulunamadı. Yönetim paneli varsayılan tarayıcıda açılacak.\n\nMicrosoft Edge WebView2 Runtime was not found. The control panel will open in your default browser.",
+                "LANtern", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            Process.Start(new ProcessStartInfo(_address.ToString()) { UseShellExecute = true });
+            Hide();
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show(
+                $"Yerleşik yönetim paneli başlatılamadı. Panel varsayılan tarayıcıda açılacak.\n\nThe native control panel could not be started. The panel will open in your default browser.\n\n{exception.Message}",
                 "LANtern", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             Process.Start(new ProcessStartInfo(_address.ToString()) { UseShellExecute = true });
             Hide();
