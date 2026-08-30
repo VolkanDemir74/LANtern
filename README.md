@@ -11,7 +11,7 @@
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows-0078D4">
   <img alt=".NET" src="https://img.shields.io/badge/.NET-8-512BD4">
   <img alt="Streaming" src="https://img.shields.io/badge/streaming-WebRTC-FFB000">
-  <img alt="Release" src="https://img.shields.io/badge/release-v0.1.2--alpha-orange">
+  <img alt="Release" src="https://img.shields.io/badge/release-v0.1.3--alpha-orange">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
 </p>
 
@@ -46,6 +46,7 @@ The viewing device only needs a current web browser and access to the same priva
 - Browser-based viewing with no client installation
 - Low-latency WebRTC video over the local network
 - H.264 hardware encoding with NVIDIA NVENC support
+- Live encoder FPS, speed, dropped-frame, and duplicated-frame telemetry
 - Intel Quick Sync, AMD AMF, and software H.264 fallback paths
 - 1080p at up to 60 FPS streaming profile
 - GPU-based Desktop Duplication capture path
@@ -200,7 +201,7 @@ LANtern opens the control panel when the application starts. The optional **Star
 
 LANtern runs as a Windows tray application without opening a command window.
 
-A short tray notification confirms that LANtern is running in the background. Exiting LANtern stops the stream, closes its child processes, disconnects clients, and removes the active virtual monitor. The device service remains available for the next launch and is removed by the uninstaller.
+A short tray notification confirms that LANtern is running in the background when **Start in tray** is enabled. Exiting LANtern runs an orderly shutdown that stops the stream, closes its child processes, disconnects clients, and removes the active virtual monitor. The device service remains available for the next launch and is removed by the uninstaller.
 
 ## LAN-only security model
 

@@ -20,6 +20,7 @@ builder.Services.AddSingleton<StreamCoordinator>();
 builder.Services.AddSingleton<MediaMtxService>();
 builder.Services.AddSingleton<VirtualDisplayManager>();
 builder.Services.AddSingleton<LanternSettingsService>();
+builder.Services.AddHostedService<ShutdownCleanupService>();
 builder.Services.AddHostedService<TrayApplication>();
 builder.Services.AddHostedService<StartupAutomation>();
 
@@ -36,6 +37,10 @@ app.MapGet("/api/status", (LanAddressService lan, DisplayCatalog displays, Strea
     displays = displays.GetDisplays(),
     selectedDisplay = stream.SelectedDisplay,
     receivedPackets = stream.ReceivedPackets,
+    encodeFps = stream.EncodeFps,
+    encodeSpeed = stream.EncodeSpeed,
+    droppedFrames = stream.DroppedFrames,
+    duplicatedFrames = stream.DuplicatedFrames,
     encoder = stream.ActiveEncoder,
     error = stream.LastError,
     virtualDisplayConnected = virtualDisplay.IsConnected
@@ -103,14 +108,6 @@ app.MapPost("/api/settings", async (HttpContext context, LanternSettings value, 
         return Results.StatusCode(StatusCodes.Status403Forbidden);
     await settings.SaveAsync(value);
     return Results.Ok(new { message = "Ayarlar kaydedildi." });
-});
-app.Lifetime.ApplicationStopping.Register(() =>
-{
-    app.Services.GetRequiredService<StreamCoordinator>().Dispose();
-    try { app.Services.GetRequiredService<VirtualDisplayManager>().StopAsync().GetAwaiter().GetResult(); }
-    catch { }
-    app.Services.GetRequiredService<MediaMtxService>().Dispose();
-    app.Services.GetRequiredService<ChildProcessJob>().Dispose();
 });
 app.Run();
 

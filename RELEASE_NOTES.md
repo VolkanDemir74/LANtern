@@ -1,30 +1,20 @@
-# LANtern v0.1.2-alpha
+# LANtern v0.1.3-alpha
 
-This alpha update completes the LANtern product rename and improves application, tray, and virtual-display lifecycle behavior.
+This alpha update stabilizes the 1080p streaming profile and fixes shutdown cleanup from the system tray.
 
-## Improved
+## Streaming improvements
 
-- The project, executable, solutions, namespaces, driver, and virtual-display device now consistently use the LANtern name.
-- LANtern opens the control panel by default on a normal launch.
-- The optional **Start in tray** setting keeps the panel closed.
-- When starting in tray, LANtern displays a clickable startup card near the notification area.
-- The tray tooltip clearly indicates that LANtern is running in the background.
-- Closing LANtern now stops streaming, disconnects the active virtual monitor, and cleans up child processes.
-- Virtual-display service installation and removal are handled by the native LANtern device helper.
+- The H.264 keyframe interval is now one second instead of four keyframes per second, reducing periodic bitrate and frame-time spikes.
+- NVIDIA NVENC now uses the balanced `p3` ultra-low-latency preset.
+- NVENC multipass is disabled and frame output delay is set to zero.
+- The bitrate buffer has been adjusted for smoother 1080p60 delivery.
+- The control panel now displays encoder FPS, processing speed, dropped frames, and duplicated frames.
 
-## Included
+## Shutdown fixes
 
-- Local-network browser viewer
-- WebRTC video streaming through MediaMTX
-- H.264 hardware encoding support
-- Physical display capture
-- 1920x1080 virtual Windows monitor
-- Windows tray controls
-- Turkish and English control panel
-- QR viewer link
-- Persistent streaming settings
-- Optional Windows startup automation
-- Native Windows service for virtual display control
+- Exiting from the tray no longer blocks the tray interface while disconnecting the virtual monitor.
+- Streaming, virtual-display, WebRTC, and child-process cleanup now run in an orderly asynchronous shutdown service.
+- Cleanup operations have bounded timeouts so one component cannot leave LANtern stuck during exit.
 
 ## Important notes
 
@@ -35,4 +25,4 @@ This alpha update completes the LANtern product rename and improves application,
 - A production-signed driver will be required for a stable public release.
 
 Please report problems through GitHub Issues and include the Windows version,
-GPU model, browser, and selected streaming profile.
+GPU model, browser, selected streaming profile, and the encoder telemetry shown in the control panel.

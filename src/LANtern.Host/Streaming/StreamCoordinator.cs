@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using LANtern.Host.Capture;
 using Microsoft.Extensions.Options;
 
@@ -19,6 +20,10 @@ public sealed class StreamCoordinator : IDisposable
     public string ActiveEncoder { get; private set; } = "Başlatılmadı";
     public string? LastError { get; private set; }
     public long ReceivedPackets => Interlocked.Read(ref _receivedPackets);
+    public double EncodeFps => Volatile.Read(ref _encodeFps);
+    public double EncodeSpeed => Volatile.Read(ref _encodeSpeed);
+    public long DroppedFrames => Interlocked.Read(ref _droppedFrames);
+    public long DuplicatedFrames => Interlocked.Read(ref _duplicatedFrames);
 
     public StreamCoordinator(DisplayCatalog displays, FfmpegLocator ffmpeg, IOptions<StreamOptions> defaults, ILogger<StreamCoordinator> logger, MediaMtxService mediaMtx, ChildProcessJob job)
         => (_displays, _ffmpeg, _defaults, _logger, _mediaMtx, _job) = (displays, ffmpeg, defaults.Value, logger, mediaMtx, job);
@@ -29,6 +34,10 @@ public sealed class StreamCoordinator : IDisposable
         _job.StopOrphanedLANternProcesses();
         LastError = null;
         Interlocked.Exchange(ref _receivedPackets, 0);
+        Volatile.Write(ref _encodeFps, 0);
+        Volatile.Write(ref _encodeSpeed, 0);
+        Interlocked.Exchange(ref _droppedFrames, 0);
+        Interlocked.Exchange(ref _duplicatedFrames, 0);
         var executable = _ffmpeg.Find();
         if (executable is null) return Fail("ffmpeg.exe bulunamadı. README'deki FFmpeg Shared kurulumunu yapın veya ffmpeg.exe dosyasını uygulamanın yanına koyun.");
 
@@ -68,12 +77,48 @@ public sealed class StreamCoordinator : IDisposable
 
     private async Task MonitorAsync(Process process)
     {
-        var error = await process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync();
-        if (process.ExitCode != 0)
+        var recentErrors = new Queue<string>();
+        try
         {
-            LastError = "Video kodlayıcı beklenmedik biçimde kapandı. Ayrıntılar uygulama konsoluna yazıldı.";
-            _logger.LogError("FFmpeg hata çıktısı: {Error}", error);
+            while (await process.StandardError.ReadLineAsync() is { } line)
+            {
+                if (TryReadProgress(line)) continue;
+                if (recentErrors.Count >= 40) recentErrors.Dequeue();
+                recentErrors.Enqueue(line);
+            }
+            await process.WaitForExitAsync();
+            if (process.ExitCode != 0)
+            {
+                LastError = "Video kodlayıcı beklenmedik biçimde kapandı. Ayrıntılar uygulama konsoluna yazıldı.";
+                _logger.LogError("FFmpeg hata çıktısı: {Error}", string.Join(Environment.NewLine, recentErrors));
+            }
+        }
+        catch (ObjectDisposedException) { }
+    }
+
+    private bool TryReadProgress(string line)
+    {
+        var separator = line.IndexOf('=');
+        if (separator < 1) return false;
+        var key = line[..separator];
+        var value = line[(separator + 1)..];
+        switch (key)
+        {
+            case "fps" when double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var fps):
+                Volatile.Write(ref _encodeFps, fps); return true;
+            case "speed":
+                value = value.TrimEnd('x');
+                if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var speed))
+                    Volatile.Write(ref _encodeSpeed, speed);
+                return true;
+            case "drop_frames" when long.TryParse(value, out var dropped):
+                Interlocked.Exchange(ref _droppedFrames, dropped); return true;
+            case "dup_frames" when long.TryParse(value, out var duplicated):
+                Interlocked.Exchange(ref _duplicatedFrames, duplicated); return true;
+            case "frame" or "bitrate" or "total_size" or "out_time_us" or "out_time_ms" or "out_time" or "progress":
+                return true;
+            default:
+                return false;
         }
     }
 
@@ -85,12 +130,12 @@ public sealed class StreamCoordinator : IDisposable
 
     private static string BuildArguments(DisplayInfo display, StartStreamRequest request, string encoder, string publisherUrl)
     {
-        // Keep recovery fast while RTX/NACK retransmission is not available.
-        var keyFrameInterval = Math.Max(1, request.Fps / 4);
-        var common = $"-hide_banner -loglevel warning -an -c:v {encoder} -b:v {request.BitrateKbps}k -maxrate {request.BitrateKbps}k -bufsize {Math.Max(1000, request.BitrateKbps / 4)}k -g {keyFrameInterval} -keyint_min {keyFrameInterval} -sc_threshold 0 -bf 0";
+        // One IDR per second avoids periodic bitrate and frame-time spikes.
+        var keyFrameInterval = Math.Max(1, request.Fps);
+        var common = $"-hide_banner -loglevel warning -progress pipe:2 -stats_period 1 -an -c:v {encoder} -b:v {request.BitrateKbps}k -maxrate {request.BitrateKbps}k -bufsize {Math.Max(1000, request.BitrateKbps / 2)}k -g {keyFrameInterval} -keyint_min {keyFrameInterval} -sc_threshold 0 -bf 0 -flags +low_delay";
         var tuning = encoder switch
         {
-            "h264_nvenc" => "-preset p1 -tune ull -rc cbr -profile:v baseline -forced-idr 1 -zerolatency 1 -aud 1",
+            "h264_nvenc" => "-preset p3 -tune ull -rc cbr -multipass disabled -delay 0 -surfaces 4 -profile:v baseline -forced-idr 1 -zerolatency 1 -aud 1",
             "h264_qsv" => "-preset veryfast -low_power 1 -profile:v baseline",
             "h264_amf" => "-usage ultralowlatency -quality speed -profile:v baseline",
             _ => "-preset ultrafast -tune zerolatency -profile:v baseline"
@@ -114,5 +159,9 @@ public sealed class StreamCoordinator : IDisposable
 
     private OperationResult Fail(string message) { LastError = message; return new(false, message); }
     private long _receivedPackets;
+    private double _encodeFps;
+    private double _encodeSpeed;
+    private long _droppedFrames;
+    private long _duplicatedFrames;
     public void Dispose() => StopAsync().GetAwaiter().GetResult();
 }

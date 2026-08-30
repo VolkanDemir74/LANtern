@@ -29,7 +29,8 @@ function renderStatus(app) {
   $('display').value = oldDisplay || '0';
   $('monitorStart').disabled = app.virtualDisplayConnected;
   $('monitorStop').disabled = !app.virtualDisplayConnected;
-  $('info').textContent = app.error ? `${t('error')}: ${app.error}` : (app.running ? `${t('encoder')}: ${encoderName(app.encoder)} · ${t('gatewayReady')}` : t('choose'));
+  const performance = app.encodeFps > 0 ? ` · ${app.encodeFps.toFixed(1)} FPS · ${app.encodeSpeed.toFixed(2)}× · Drop ${app.droppedFrames} · Dup ${app.duplicatedFrames}` : '';
+  $('info').textContent = app.error ? `${t('error')}: ${app.error}` : (app.running ? `${t('encoder')}: ${encoderName(app.encoder)} · ${t('gatewayReady')}${performance}` : t('choose'));
 }
 
 async function status() {

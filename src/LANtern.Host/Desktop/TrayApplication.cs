@@ -64,7 +64,14 @@ public sealed class TrayApplication : IHostedService, IDisposable
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Hakkında / About", null, (_, _) => ShowAbout());
         menu.Items.Add("GitHub — VolkanDemir74", null, (_, _) => OpenUrl("https://github.com/VolkanDemir74"));
-        menu.Items.Add("LANtern'dan çık", null, (_, _) => _lifetime.StopApplication());
+        var exitItem = menu.Items.Add("LANtern'dan çık");
+        exitItem.Click += (_, _) =>
+        {
+            exitItem.Enabled = false;
+            exitItem.Text = "LANtern kapatılıyor...";
+            menu.Enabled = false;
+            _lifetime.StopApplication();
+        };
         menu.Opening += (_, _) => UpdateMenu(monitor, broadcast);
 
         var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "LANtern.ico");

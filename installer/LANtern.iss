@@ -1,5 +1,5 @@
 #define MyAppName "LANtern"
-#define MyAppVersion "0.1.2"
+#define MyAppVersion "0.1.3"
 #define MyAppPublisher "Volkan Demir"
 #define MyAppURL "https://github.com/VolkanDemir74"
 #define StageDir "..\artifacts\installer-stage"
