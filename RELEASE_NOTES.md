@@ -1,12 +1,17 @@
-# LANtern v0.1.6-alpha
+# LANtern v0.1.7-alpha
 
-This hotfix corrects native control-panel startup for installed copies of LANtern.
+This hotfix improves the complete update experience from discovery through relaunch.
 
 ## Fixed
 
-- WebView2 profile data is now stored under the current user's local application-data folder instead of the protected Program Files installation directory.
-- Installed copies no longer fail with `E_ACCESSDENIED` when opening the native control panel as a standard user.
-- If the embedded WebView2 panel cannot start for another reason, LANtern now reports the problem and opens the control panel in the default browser instead of terminating with an unhandled exception.
+- When LANtern starts in the system tray and finds an update, it now opens the control panel so the update dialog is visible.
+- Update downloads now display real byte-based progress, followed by verification and installer-launch stages.
+- Silent automatic updates now relaunch the installed LANtern application after setup finishes.
+- The relaunched application runs as the original desktop user instead of retaining installer elevation.
+
+## Installation behavior
+
+LANtern downloads the official installer and checksum, verifies SHA-256, requests Windows administrator approval, installs silently, and relaunches automatically. The Windows UAC approval still requires user confirmation.
 
 ## Important notes
 

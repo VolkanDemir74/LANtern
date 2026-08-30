@@ -212,6 +212,9 @@ public sealed class TrayApplication : IHostedService, IDisposable
         _dispatcher.BeginInvoke(() =>
         {
             if (_icon is null) return;
+            // Starting in the tray hides the normal startup panel, but an
+            // available update still needs a visible decision surface.
+            OpenAdmin();
             var turkish = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("tr", StringComparison.OrdinalIgnoreCase);
             _icon.BalloonTipTitle = turkish ? "LANtern güncellemesi hazır" : "LANtern update available";
             _icon.BalloonTipText = turkish

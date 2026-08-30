@@ -51,9 +51,11 @@
     <form method="dialog" class="settings-panel">
       <div class="settings-title"><h2 data-i18n="updateAvailable">Yeni LANtern sürümü bulundu</h2><button value="cancel" class="close-button" aria-label="Close">×</button></div>
       <p id="updateMessage"></p>
+      <div id="updateProgress" class="update-progress" hidden><div id="updateProgressBar"></div></div>
+      <p id="updateProgressText" class="update-progress-text" hidden></p>
       <div class="update-actions"><button id="installUpdate" type="button" data-i18n="installNow">Şimdi yükle</button><button value="cancel" class="secondary" data-i18n="later">Daha sonra</button><button id="skipUpdate" type="button" class="secondary" data-i18n="skipVersion">Bu sürümü atla</button><button id="disableUpdates" type="button" class="danger" data-i18n="never">Asla denetleme</button></div>
     </form>
   </dialog>
-  <script src="app.js?v=31"></script>
+  <script src="app.js?v=32"></script>
 </body>
 </html>

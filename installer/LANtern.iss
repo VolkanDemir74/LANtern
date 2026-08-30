@@ -1,5 +1,5 @@
 #define MyAppName "LANtern"
-#define MyAppVersion "0.1.6"
+#define MyAppVersion "0.1.7"
 #define MyAppPublisher "Volkan Demir"
 #define MyAppURL "https://github.com/VolkanDemir74"
 #define StageDir "..\artifacts\installer-stage"
@@ -54,7 +54,8 @@ Filename: "{sys}\pnputil.exe"; Parameters: "/add-driver ""{app}\driver\IddSample
 Filename: "{app}\LANtern.DeviceService.exe"; Parameters: "--install"; Flags: runhidden waituntilterminated
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""LANtern LAN HTTP"""; Flags: runhidden waituntilterminated
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""LANtern LAN HTTP"" dir=in action=allow program=""{app}\LANtern.exe"" protocol=TCP localport=5000 profile=private enable=yes"; Flags: runhidden waituntilterminated
-Filename: "{app}\LANtern.exe"; Description: "LANtern'ı çalıştır / Launch LANtern"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\LANtern.exe"; Description: "LANtern'ı çalıştır / Launch LANtern"; Flags: nowait postinstall skipifsilent; Check: IsInteractiveInstall
+Filename: "{app}\LANtern.exe"; Flags: nowait runasoriginaluser; Check: IsAutoUpdate
 
 [UninstallRun]
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM LANtern.exe"; Flags: runhidden waituntilterminated; RunOnceId: "StopHost"
@@ -66,6 +67,24 @@ Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=
 function IsUpgrade(): Boolean;
 begin
   Result := RegKeyExists(HKLM64, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{7CB12F72-7DAF-49EE-83EE-A159B08EE3F4}_is1');
+end;
+
+function IsAutoUpdate(): Boolean;
+var
+  Index: Integer;
+begin
+  Result := False;
+  for Index := 1 to ParamCount do
+    if CompareText(ParamStr(Index), '/LANTERNAUTOUPDATE') = 0 then
+    begin
+      Result := True;
+      Exit;
+    end;
+end;
+
+function IsInteractiveInstall(): Boolean;
+begin
+  Result := not IsAutoUpdate();
 end;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);

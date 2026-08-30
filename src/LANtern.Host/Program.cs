@@ -138,6 +138,12 @@ app.MapPost("/api/update/install", async (HttpContext context, UpdateService upd
     try { return Results.Ok(new { version = await updates.DownloadAndInstallAsync(ct) }); }
     catch (Exception ex) { return Results.Problem($"Güncelleme yüklenemedi: {ex.Message}"); }
 });
+app.MapGet("/api/update/progress", (HttpContext context, UpdateService updates) =>
+{
+    if (context.Connection.RemoteIpAddress is not { } address || !System.Net.IPAddress.IsLoopback(address))
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    return Results.Ok(updates.GetProgress());
+});
 app.MapPost("/api/update/preference", async (HttpContext context, UpdatePreference value, LanternSettingsService settings) =>
 {
     if (context.Connection.RemoteIpAddress is not { } address || !System.Net.IPAddress.IsLoopback(address))

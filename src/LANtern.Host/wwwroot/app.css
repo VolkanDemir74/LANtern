@@ -108,6 +108,9 @@ dialog::backdrop { background: #02050acc; backdrop-filter: blur(3px); }
 .update-row button { flex: none; }
 .update-row span { color: #93c5fd; font-size: 12px; }
 .update-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 18px; }
+.update-progress { height: 10px; overflow: hidden; border-radius: 999px; background: #273750; }
+.update-progress > div { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #f5a900, #ffc13d); transition: width .2s ease; }
+.update-progress-text { margin: 7px 0 0; color: #a9c4e8; font-size: 13px; text-align: right; }
 .danger { background: #7f1d1d; }
 
 @media (max-width: 800px) {
