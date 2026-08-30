@@ -7,11 +7,14 @@ public sealed class LanternSettings
     public bool AutoStartStream { get; set; }
     public bool AutoStartWhenMonitorConnect { get; set; } = true;
     public bool StartInTray { get; set; }
+    public bool CheckForUpdates { get; set; } = true;
+    public string SkippedUpdateVersion { get; set; } = "";
+    public string ControlPanelClient { get; set; } = "native";
     public string PreferredDisplayName { get; set; } = "";
     public int Width { get; set; } = 1920;
     public int Height { get; set; } = 1080;
     public int Fps { get; set; } = 60;
-    public int BitrateKbps { get; set; } = 15000;
+    public int BitrateKbps { get; set; } = 10000;
     public string Encoder { get; set; } = "auto";
     public string ScalingMode { get; set; } = "fill";
     public bool CaptureCursor { get; set; } = true;

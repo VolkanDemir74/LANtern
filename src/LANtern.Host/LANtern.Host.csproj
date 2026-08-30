@@ -12,17 +12,24 @@
     <AssemblyTitle>LANtern</AssemblyTitle>
     <Product>LANtern</Product>
     <Description>Your screen, anywhere on your LAN.</Description>
-    <Version>0.1.4-alpha</Version>
-    <FileVersion>0.1.4.0</FileVersion>
+    <Version>0.1.5-alpha</Version>
+    <FileVersion>0.1.5.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="QRCoder" Version="1.8.0" />
     <PackageReference Include="System.Management" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4191.47" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\LANtern.ico" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+
+  <Target Name="RemoveUnusedWebView2WpfReference" BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <Reference Remove="@(Reference)" Condition="'%(Filename)' == 'Microsoft.Web.WebView2.Wpf'" />
+    </ItemGroup>
+  </Target>
 
 </Project>

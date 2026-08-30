@@ -2,48 +2,58 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>LANtern</title><link rel="icon" href="/assets/lantern-brand.png"><link rel="stylesheet" href="app.css">
+  <title>LANtern</title><link rel="icon" href="/assets/lantern-brand.png"><link rel="stylesheet" href="app.css?v=6">
 </head>
 <body>
   <main>
     <section class="panel">
       <header>
-        <div class="brand"><img src="/assets/lantern-brand.png" alt="LANtern"><p><span data-i18n="adminPanel">Yönetim paneli</span><a href="/" target="_blank" data-i18n="openViewer">İzleme sayfasını aç</a></p></div>
-        <div class="header-tools"><div class="language" role="group" aria-label="Language"><button type="button" data-lang="tr">TR</button><span>•</span><button type="button" data-lang="en">EN</button></div><button id="openSettings" class="settings-trigger" data-i18n="settings">Ayarlar</button><span id="state" class="badge">Hazır</span></div>
+        <div class="brand"><img src="/assets/lantern-brand.png" alt="LANtern"><div class="language" role="group" aria-label="Language"><button type="button" data-lang="tr">TR</button><span>•</span><button type="button" data-lang="en">EN</button></div><p><span data-i18n="adminPanel">Yönetim paneli</span><a href="/" target="_blank" data-i18n="openViewer">İzleme sayfasını aç</a></p></div>
       </header>
       <div class="grid">
-        <label><span data-i18n="address">LANtern adresi</span><output id="url">—</output></label>
         <label><span data-i18n="display">Ekran</span><select id="display"></select></label>
       </div>
-      <div class="monitor-actions"><button id="monitorStart" class="secondary" data-i18n="monitorStart">Sanal monitörü bağla</button><button id="monitorStop" class="secondary" data-i18n="monitorStop">Sanal monitör bağlantısını kes</button></div>
-      <div class="actions"><button id="start" data-i18n="start">Yayını Başlat</button><button id="stop" class="secondary" data-i18n="stop">Yayını Durdur</button><button id="connect" class="secondary" data-i18n="connect">Bağlan</button><button id="fullscreen" class="secondary" data-i18n="fullscreen">Tam Ekran</button></div>
-      <section class="qr"><img src="/api/qr" alt="Viewer QR code"><span data-i18n="qr">Telefon kamerasıyla okut: izleme sayfası</span></section>
+      <div class="toggle-actions"><button id="monitorToggle" class="secondary" data-i18n="monitorStart">Sanal monitörü bağla</button><button id="streamToggle" data-i18n="start">Yayını Başlat</button></div>
+      <div class="actions"><button id="openSettings" class="secondary" data-i18n="settings">Ayarlar</button><button id="fullscreen" class="secondary" data-i18n="fullscreen">Tam Ekran</button></div>
+      <section class="qr"><div class="address-row"><span class="address-label" data-i18n="address">LANtern adresi</span><span id="url" class="lan-address">—</span><button id="qrToggle" type="button" class="qr-toggle" aria-label="QR code" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v7H3V3Zm2 2v3h3V5H5Zm9-2h7v7h-7V3Zm2 2v3h3V5h-3ZM3 14h7v7H3v-7Zm2 2v3h3v-3H5Zm9-2h3v3h-3v-3Zm4 0h3v3h-3v-3Zm-4 4h3v3h-3v-3Zm4 0h1v1h2v2h-4v-3Z"/></svg></button></div><div id="qrDetails" class="qr-details" hidden><img src="/api/qr" alt="Viewer QR code"><span data-i18n="qr">Telefon kamerasıyla okut: izleme sayfası</span></div></section>
       <p id="info" class="info"></p>
     </section>
-    <section id="viewerShell" class="viewer"><iframe id="viewer" srcdoc="<!doctype html><style>html,body{width:100%;height:100%;margin:0;background:#030508}</style>" title="LANtern stream" allow="autoplay; fullscreen" allowfullscreen></iframe><div id="empty" data-i18n="viewerEmpty">Yayını görüntülemek için Bağlan'a basın</div></section>
+    <section id="viewerShell" class="viewer"><span id="state" class="badge viewer-state">Hazır</span><iframe id="viewer" srcdoc="<!doctype html><style>html,body{width:100%;height:100%;margin:0;background:#030508}</style>" title="LANtern stream" allow="autoplay; fullscreen" allowfullscreen></iframe><div id="empty" data-i18n="viewerEmpty">Önizleme için yayını başlatın</div></section>
   </main>
   <dialog id="settingsDialog">
     <form method="dialog" class="settings-panel">
       <div class="settings-title"><h2 data-i18n="settings">Ayarlar</h2><button value="cancel" class="close-button" aria-label="Close">×</button></div>
       <div class="settings-grid">
+        <label><span data-i18n="controlPanelClient">Yönetim paneli istemcisi</span><select id="controlPanelClient"><option value="native" data-i18n="clientNative">Native (önerilen)</option><option value="edge">Microsoft Edge</option><option value="chrome">Google Chrome</option></select></label>
+        <label><span data-i18n="scaling">Görüntü yerleşimi</span><select id="scalingMode"><option value="fill" selected></option><option value="fit"></option></select></label>
         <label><span data-i18n="resolution">Çözünürlük</span><select id="resolution"><option>1920x1080</option><option>1920x1200</option><option>1280x720</option></select></label>
         <label><span data-i18n="fps">Kare hızı</span><select id="fps"><option>60</option><option>30</option></select></label>
-        <label class="wide"><span data-i18n="scaling">Görüntü yerleşimi</span><select id="scalingMode"><option value="fill" selected></option><option value="fit"></option></select></label>
-        <label><span data-i18n="bitrate">Bit hızı</span><select id="bitrate"><option value="10000">10 Mbps</option><option value="15000" selected></option><option value="20000">20 Mbps</option><option value="25000">25 Mbps</option></select></label>
+        <label><span data-i18n="bitrate">Bit hızı</span><select id="bitrate"><option value="10000" selected></option><option value="15000">15 Mbps</option><option value="20000">20 Mbps</option><option value="25000">25 Mbps</option></select></label>
         <label><span data-i18n="encoder">Kodlayıcı</span><select id="encoder"><option value="auto"></option><option value="h264_nvenc">NVIDIA NVENC</option><option value="h264_qsv">Intel Quick Sync</option><option value="h264_amf">AMD AMF</option><option value="libx264"></option></select></label>
       </div>
       <div class="settings-checks">
+        <h3 class="check-group" data-i18n="generalSettings">Genel</h3>
         <label class="check"><input id="captureCursor" type="checkbox" checked><span data-i18n="cursor">Fare imlecini göster</span></label>
-        <label class="check"><input id="startWithWindows" type="checkbox"><span data-i18n="startWithWindows">Windows ile LANtern'ı başlat</span></label>
-        <label class="check"><input id="autoConnectMonitor" type="checkbox"><span data-i18n="autoConnectMonitor">Sanal monitörü otomatik bağla</span></label>
-        <label class="check"><input id="autoStartOnMonitorConnect" type="checkbox" checked><span data-i18n="autoStartOnMonitorConnect">Sanal monitör bağlanınca yayını başlat</span></label>
-        <label class="check"><input id="autoStartStream" type="checkbox"><span data-i18n="autoStartStream">LANtern açılınca yayını otomatik başlat</span></label>
-        <label class="check"><input id="startInTray" type="checkbox"><span data-i18n="startInTray">Tray'de başlat</span></label>
+        <label class="check"><input id="checkForUpdates" type="checkbox" checked><span data-i18n="checkForUpdates">Açılışta güncellemeleri denetle</span></label>
+        <h3 class="check-group" data-i18n="startupAutomation">Başlangıç ve otomasyon</h3>
+        <label class="check"><input id="startWithWindows" type="checkbox"><span data-i18n="startWithWindows">Windows açıldığında LANtern'ı çalıştır</span></label>
+        <label class="check"><input id="startInTray" type="checkbox"><span data-i18n="startInTray">LANtern'ı panel açmadan tray'de başlat</span></label>
+        <label class="check"><input id="autoConnectMonitor" type="checkbox"><span data-i18n="autoConnectMonitor">LANtern açıldığında sanal monitörü bağla</span></label>
+        <label class="check"><input id="autoStartStream" type="checkbox"><span data-i18n="autoStartStream">LANtern açıldığında seçili ekranın yayınını başlat</span></label>
+        <label class="check"><input id="autoStartOnMonitorConnect" type="checkbox" checked><span data-i18n="autoStartOnMonitorConnect">Panelden sanal monitör bağlanınca yayınını da başlat</span></label>
       </div>
-      <p class="settings-note" data-i18n="settingsNote">Otomatik yayın, ana panelde seçili olan ekranı ve bu yayın profilini kullanır.</p>
+      <p class="settings-note" data-i18n="settingsNote">Başlangıç yayını, ana panelde son seçilen ekranı ve yukarıdaki yayın profilini kullanır.</p>
+      <div class="update-row"><button id="checkUpdate" type="button" class="secondary" data-i18n="checkUpdate">Güncellemeleri denetle</button><span id="updateStatus"></span></div>
       <div class="settings-actions"><button value="cancel" class="secondary" data-i18n="cancel">İptal</button><button id="saveSettings" type="button" data-i18n="save">Kaydet</button></div>
     </form>
   </dialog>
-  <script src="app.js?v=20"></script>
+  <dialog id="updateDialog">
+    <form method="dialog" class="settings-panel">
+      <div class="settings-title"><h2 data-i18n="updateAvailable">Yeni LANtern sürümü bulundu</h2><button value="cancel" class="close-button" aria-label="Close">×</button></div>
+      <p id="updateMessage"></p>
+      <div class="update-actions"><button id="installUpdate" type="button" data-i18n="installNow">Şimdi yükle</button><button value="cancel" class="secondary" data-i18n="later">Daha sonra</button><button id="skipUpdate" type="button" class="secondary" data-i18n="skipVersion">Bu sürümü atla</button><button id="disableUpdates" type="button" class="danger" data-i18n="never">Asla denetleme</button></div>
+    </form>
+  </dialog>
+  <script src="app.js?v=31"></script>
 </body>
 </html>

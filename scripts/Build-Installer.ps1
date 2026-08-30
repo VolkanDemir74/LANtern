@@ -2,6 +2,7 @@
 param(
     [string]$FfmpegPath,
     [string]$MediaMtxPath,
+    [string]$DriverPackagePath,
     [switch]$DevelopmentDriver,
     [switch]$SkipInstaller
 )
@@ -47,8 +48,21 @@ if (-not $msbuild -or -not (Test-Path -LiteralPath $msbuild)) { throw 'MSBuild b
 New-Item -ItemType Directory -Force -Path $nativeOutput | Out-Null
 & $msbuild $nativeProject /t:Build /p:Configuration=Release /p:Platform=x64 "/p:OutDir=$nativeOutput\" /m
 if ($LASTEXITCODE -ne 0) { throw 'LANtern.DeviceService derlenemedi.' }
-& $msbuild $driverProject /t:Build /p:Configuration=Release /p:Platform=x64 /m
-if ($LASTEXITCODE -ne 0) { throw 'LANtern sanal monitör sürücüsü derlenemedi.' }
+$resolvedDriverPackage = $null
+if ($DriverPackagePath) {
+    $resolvedDriverPackage = (Resolve-Path -LiteralPath $DriverPackagePath).Path
+    foreach ($requiredDriverFile in @('IddSampleDriver.dll', 'IddSampleDriver.inf', 'iddsampledriver.cat')) {
+        if (-not (Test-Path -LiteralPath (Join-Path $resolvedDriverPackage $requiredDriverFile) -PathType Leaf)) {
+            throw "Sürücü paketinde $requiredDriverFile bulunamadı: $resolvedDriverPackage"
+        }
+    }
+    Write-Host "Mevcut sürücü paketi kullanılıyor: $resolvedDriverPackage" -ForegroundColor Yellow
+}
+else {
+    & $msbuild $driverProject /t:Build /p:Configuration=Release /p:Platform=x64 /m
+    if ($LASTEXITCODE -ne 0) { throw 'LANtern sanal monitör sürücüsü derlenemedi.' }
+    $resolvedDriverPackage = Join-Path $repoRoot 'drivers\LANtern.VirtualDisplay\x64\Release\IddSampleDriver'
+}
 
 dotnet publish $hostProject -p:PublishProfile=win-x64 --nologo
 if ($LASTEXITCODE -ne 0) { throw 'LANtern publish işlemi başarısız.' }
@@ -66,9 +80,13 @@ if (Test-Path -LiteralPath (Join-Path $ffmpegRoot 'README.txt')) { Copy-Item -Li
 Copy-Item -LiteralPath $mediamtx -Destination (Join-Path $resolvedStage 'mediamtx.exe') -Force
 if (Test-Path -LiteralPath (Join-Path (Split-Path $mediamtx) 'LICENSE')) { Copy-Item -LiteralPath (Join-Path (Split-Path $mediamtx) 'LICENSE') -Destination (Join-Path $resolvedStage 'licenses\MediaMTX-LICENSE.txt') -Force }
 Copy-Item -LiteralPath (Join-Path $nativeOutput 'IddSampleApp.exe') -Destination (Join-Path $resolvedStage 'LANtern.DeviceService.exe') -Force
-Copy-Item -Path (Join-Path $repoRoot 'drivers\LANtern.VirtualDisplay\x64\Release\IddSampleDriver\*') -Destination (Join-Path $resolvedStage 'driver') -Recurse -Force
+Copy-Item -Path (Join-Path $resolvedDriverPackage '*') -Destination (Join-Path $resolvedStage 'driver') -Recurse -Force
 if ($DevelopmentDriver) {
-    $testCertificate = Join-Path $repoRoot 'drivers\LANtern.VirtualDisplay\x64\Release\IddSampleDriver.cer'
+    $testCertificate = if (Test-Path -LiteralPath (Join-Path $resolvedDriverPackage 'LANtern-Test.cer')) {
+        Join-Path $resolvedDriverPackage 'LANtern-Test.cer'
+    } else {
+        Join-Path $repoRoot 'drivers\LANtern.VirtualDisplay\x64\Release\IddSampleDriver.cer'
+    }
     if (-not (Test-Path -LiteralPath $testCertificate)) { throw 'Development driver sertifikası bulunamadı.' }
     Copy-Item -LiteralPath $testCertificate -Destination (Join-Path $resolvedStage 'driver\LANtern-Test.cer') -Force
 }

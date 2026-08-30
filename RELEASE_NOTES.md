@@ -1,24 +1,34 @@
-# LANtern v0.1.4-alpha
+# LANtern v0.1.5-alpha
 
-This alpha update improves compatibility across different GPUs and simplifies first-time installation.
+This alpha release introduces a dedicated native control panel, secure update checks, clearer automation settings, and several streaming stability improvements.
 
-## Encoder compatibility
+## Native control panel
 
-- Automatic encoder selection now performs a real test encode instead of relying only on the FFmpeg encoder list.
-- LANtern tries NVIDIA NVENC, Intel Quick Sync, AMD AMF, and software H.264 in preference order.
-- Computers without a supported hardware encoder now fall back to software H.264 automatically.
-- Manually selecting an unavailable encoder now produces a clear message in the control panel.
-- FFmpeg startup failures are shown in the control panel instead of referring to a hidden console.
+- The control panel now opens in a dedicated WebView2 window instead of creating a browser tab.
+- Native, Microsoft Edge, and Google Chrome panel clients can be selected in Settings.
+- The native window uses a dark title bar, adaptive sizing, and system-tray minimize behavior.
+- LANtern is now single-instance. Launching it again activates the existing control-panel window.
 
-## Cursor capture
+## Updates
 
-- The **Show mouse cursor** setting now works with Intel Quick Sync, AMD AMF, and software H.264 capture paths.
-- Cursor visibility remains configurable for every encoder.
+- LANtern can check the official `VolkanDemir74/LANtern` GitHub Releases feed at startup or on demand.
+- Available releases can be installed now, postponed, skipped, or disabled.
+- Downloaded installers are verified against the SHA-256 checksum published with the release before execution.
 
-## Installer
+## Interface
 
-- The setup wizard now asks only once whether LANtern should launch after installation.
-- The installer remains self-contained and includes the host, FFmpeg, MediaMTX, virtual-display service, and development-signed driver.
+- The control sidebar has a compact responsive layout with state-aware stream and virtual-monitor buttons.
+- Settings use grouped two-column controls and toggle switches with clearer automation descriptions.
+- The LAN address is presented as plain text with a collapsible vector QR button.
+- Turkish and English interface text has been updated throughout.
+- The default native window and settings dialog better fit standard and ultrawide desktops.
+
+## Streaming and lifecycle
+
+- The default streaming bitrate is now 10 Mbps for lower latency. Higher bitrate profiles remain available.
+- The display used by the most recent successful stream is remembered automatically.
+- Stale FFmpeg broken-pipe errors no longer replace the current stream status.
+- Stream, WebRTC gateway, virtual monitor, and child processes continue to use orderly shutdown cleanup.
 
 ## Important notes
 
@@ -28,5 +38,4 @@ This alpha update improves compatibility across different GPUs and simplifies fi
 - Viewer authentication has not been implemented yet.
 - A production-signed driver will be required for a stable public release.
 
-Please report problems through GitHub Issues and include the Windows version,
-GPU model, browser, selected encoder, and any error shown in the control panel.
+Please report problems through GitHub Issues and include the Windows version, GPU model, selected display and encoder, browser or panel client, and any error shown in the control panel.

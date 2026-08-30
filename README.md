@@ -11,7 +11,7 @@
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows-0078D4">
   <img alt=".NET" src="https://img.shields.io/badge/.NET-8-512BD4">
   <img alt="Streaming" src="https://img.shields.io/badge/streaming-WebRTC-FFB000">
-  <img alt="Release" src="https://img.shields.io/badge/release-v0.1.4--alpha-orange">
+  <img alt="Release" src="https://img.shields.io/badge/release-v0.1.5--alpha-orange">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
 </p>
 
@@ -53,6 +53,7 @@ The viewing device only needs a current web browser and access to the same priva
 - Live encoder FPS, speed, dropped-frame, and duplicated-frame telemetry
 - Intel Quick Sync, AMD AMF, and software H.264 fallback paths
 - 1080p at up to 60 FPS streaming profile
+- 10 Mbps low-latency bitrate selected by default, with higher profiles available
 - GPU-based Desktop Duplication capture path
 - Optional mouse cursor capture without persistent cursor flicker
 - LAN URL and QR code for fast mobile access
@@ -60,10 +61,20 @@ The viewing device only needs a current web browser and access to the same priva
 - Responsive mobile viewer with fullscreen support
 - Turkish and English control-panel interface
 - Windows system-tray controls
+- Single-instance host with a dedicated WebView2 control-panel window
+- Selectable native WebView2, Microsoft Edge, or Google Chrome control-panel client
+- Proportional native control-panel sizing tuned for ultrawide and standard desktops
+- Native dark title bar matching the LANtern interface
+- Compact state-aware controls for streaming and the virtual monitor
+- Collapsible QR access beside the plain LAN viewer address
+- Compact two-column settings with native-style toggle switches
 - Physical display streaming when a virtual monitor is not needed
 - Persistent streaming and startup settings
+- Automatic persistence of the display used by the most recent successful stream
+- Secure update checks through official GitHub Releases, with manual and startup controls
 - Automatic virtual-monitor connection and stream startup
 - Child-process cleanup for FFmpeg and MediaMTX
+- Clean stream restart and shutdown without stale FFmpeg pipe errors
 
 ## More than screen sharing
 
@@ -206,6 +217,8 @@ LANtern opens the control panel when the application starts. The optional **Star
 LANtern runs as a Windows tray application without opening a command window.
 
 A short tray notification confirms that LANtern is running in the background when **Start in tray** is enabled. Exiting LANtern runs an orderly shutdown that stops the stream, closes its child processes, disconnects clients, and removes the active virtual monitor. The device service remains available for the next launch and is removed by the uninstaller.
+
+LANtern can check the official GitHub Releases page when the control panel opens. Available updates can be installed immediately, postponed, skipped for that version, or disabled. The Settings panel also provides a manual update check. Downloaded installers are accepted only when their SHA-256 checksum matches the checksum published with the release.
 
 ## LAN-only security model
 

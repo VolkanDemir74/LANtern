@@ -58,6 +58,7 @@ public sealed class LanternSettingsService
         value.BitrateKbps = Math.Clamp(value.BitrateKbps, 1000, 100000);
         value.Encoder = string.IsNullOrWhiteSpace(value.Encoder) ? "auto" : value.Encoder;
         value.ScalingMode = value.ScalingMode == "fit" ? "fit" : "fill";
+        value.ControlPanelClient = value.ControlPanelClient is "chrome" or "edge" ? value.ControlPanelClient : "native";
     }
 
     private static LanternSettings Clone(LanternSettings value) => JsonSerializer.Deserialize<LanternSettings>(JsonSerializer.Serialize(value))!;

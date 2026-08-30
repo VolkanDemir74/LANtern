@@ -90,13 +90,16 @@ public sealed class StreamCoordinator : IDisposable
                 recentErrors.Enqueue(line);
             }
             await process.WaitForExitAsync();
-            if (process.ExitCode != 0)
+            // Stop/restart intentionally closes FFmpeg's RTSP pipe. Only report
+            // an encoder failure when the exited process is still the active one.
+            if (process.ExitCode != 0 && ReferenceEquals(Volatile.Read(ref _process), process))
             {
                 var details = string.Join(" | ", recentErrors.Where(line => !string.IsNullOrWhiteSpace(line)).TakeLast(3));
                 LastError = string.IsNullOrWhiteSpace(details)
                     ? $"Video kodlayıcı ({ActiveEncoder}) beklenmedik biçimde kapandı."
                     : $"Video kodlayıcı ({ActiveEncoder}) başlatılamadı: {details}";
                 _logger.LogError("FFmpeg hata çıktısı: {Error}", string.Join(Environment.NewLine, recentErrors));
+                Interlocked.CompareExchange(ref _process, null, process);
             }
         }
         catch (ObjectDisposedException) { }

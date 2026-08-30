@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using LANtern.Host.Streaming;
 using LANtern.Host.VirtualDisplay;
 using LANtern.Host.Settings;
@@ -13,6 +14,7 @@ public sealed class TrayApplication : IHostedService, IDisposable
     private readonly StreamCoordinator _stream;
     private readonly VirtualDisplayManager _virtualDisplay;
     private readonly LanternSettingsService _settings;
+    private AdminWindow? _adminWindow;
     private Thread? _thread;
     private NotifyIcon? _icon;
     private Control? _dispatcher;
@@ -33,7 +35,6 @@ public sealed class TrayApplication : IHostedService, IDisposable
         _thread = new Thread(() => RunTray(settings.StartInTray)) { IsBackground = true, Name = "LANtern Tray" };
         _thread.SetApartmentState(ApartmentState.STA);
         _thread.Start();
-        if (!settings.StartInTray) OpenAdmin();
     }
 
     private void RunTray(bool showStartupNotice)
@@ -105,6 +106,7 @@ public sealed class TrayApplication : IHostedService, IDisposable
             };
             startupNotification.Start();
         }
+        else OpenAdmin();
         Application.Run();
     }
 
@@ -182,14 +184,90 @@ public sealed class TrayApplication : IHostedService, IDisposable
         broadcast.Text = _stream.IsRunning ? "✓ Yayın: Aktif (durdur)" : "○ Yayın: Pasif (paneli aç)";
     }
 
-    private void OpenAdmin()
+    private async void OpenAdmin()
     {
+        if (_dispatcher is { InvokeRequired: true })
+        {
+            _dispatcher.BeginInvoke((Action)OpenAdmin);
+            return;
+        }
         var port = _configuration.GetValue("Server:Port", 5000);
-        OpenUrl($"http://127.0.0.1:{port}/admin.html");
+        var address = new Uri($"http://127.0.0.1:{port}/admin.html");
+        var settings = await _settings.GetAsync();
+        if (settings.ControlPanelClient is "chrome" or "edge")
+        {
+            _adminWindow?.Hide();
+            if (TryOpenBrowserApp(settings.ControlPanelClient, address)) return;
+            _icon?.ShowBalloonTip(4000, "LANtern", "Seçilen tarayıcı bulunamadı; Native panel açılıyor. / Selected browser was not found; opening Native.", ToolTipIcon.Warning);
+        }
+        _adminWindow ??= new AdminWindow(address);
+        _adminWindow.ShowAndActivate();
+    }
+
+    public void ShowAdmin() => OpenAdmin();
+
+    public void ShowUpdateAvailable(string version)
+    {
+        if (_dispatcher is not { IsDisposed: false }) return;
+        _dispatcher.BeginInvoke(() =>
+        {
+            if (_icon is null) return;
+            var turkish = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("tr", StringComparison.OrdinalIgnoreCase);
+            _icon.BalloonTipTitle = turkish ? "LANtern güncellemesi hazır" : "LANtern update available";
+            _icon.BalloonTipText = turkish
+                ? $"{version} bulundu. Ayrıntılar için yönetim panelini açın."
+                : $"{version} is available. Open the control panel for details.";
+            _icon.ShowBalloonTip(7000);
+        });
     }
 
     private static void OpenUrl(string url) =>
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+
+    private static bool TryOpenBrowserApp(string client, Uri address)
+    {
+        var processName = client == "chrome" ? "chrome" : "msedge";
+        foreach (var process in Process.GetProcessesByName(processName))
+        {
+            using (process)
+            {
+                if (process.MainWindowHandle != IntPtr.Zero && process.MainWindowTitle.Contains("LANtern", StringComparison.OrdinalIgnoreCase))
+                {
+                    ShowWindow(process.MainWindowHandle, 9);
+                    SetForegroundWindow(process.MainWindowHandle);
+                    return true;
+                }
+            }
+        }
+
+        var executable = FindBrowser(client);
+        if (executable is null) return false;
+        Process.Start(new ProcessStartInfo(executable, $"--app=\"{address}\"") { UseShellExecute = true });
+        return true;
+    }
+
+    private static string? FindBrowser(string client)
+    {
+        var candidates = client == "chrome"
+            ? new[]
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Google", "Chrome", "Application", "chrome.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Google", "Chrome", "Application", "chrome.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Google", "Chrome", "Application", "chrome.exe")
+            }
+            : new[]
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft", "Edge", "Application", "msedge.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft", "Edge", "Application", "msedge.exe")
+            };
+        return candidates.FirstOrDefault(File.Exists);
+    }
+
+    [DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr window);
+
+    [DllImport("user32.dll")]
+    private static extern bool ShowWindow(IntPtr window, int command);
 
     private static void ShowAbout()
     {
@@ -211,5 +289,5 @@ public sealed class TrayApplication : IHostedService, IDisposable
         return Task.CompletedTask;
     }
 
-    public void Dispose() { _icon?.Dispose(); _dispatcher?.Dispose(); }
+    public void Dispose() { _adminWindow?.Dispose(); _icon?.Dispose(); _dispatcher?.Dispose(); }
 }

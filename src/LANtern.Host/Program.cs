@@ -5,9 +5,13 @@ using LANtern.Host.Streaming;
 using LANtern.Host.Desktop;
 using LANtern.Host.VirtualDisplay;
 using LANtern.Host.Settings;
+using LANtern.Host.Updates;
 using QRCoder;
 
 Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
+using var activationEvent = new EventWaitHandle(false, EventResetMode.AutoReset, SingleInstanceActivationService.EventName);
+using var singleInstance = new Mutex(true, @"Local\LANtern-VolkanDemir74-Host", out var isFirstInstance);
+if (!isFirstInstance) { activationEvent.Set(); return; }
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.ConfigureKestrel(options => options.ListenAnyIP(builder.Configuration.GetValue("Server:Port", 5000)));
@@ -20,9 +24,14 @@ builder.Services.AddSingleton<StreamCoordinator>();
 builder.Services.AddSingleton<MediaMtxService>();
 builder.Services.AddSingleton<VirtualDisplayManager>();
 builder.Services.AddSingleton<LanternSettingsService>();
+builder.Services.AddHttpClient("LANternUpdates", client => client.Timeout = TimeSpan.FromMinutes(5));
+builder.Services.AddSingleton<UpdateService>();
 builder.Services.AddHostedService<ShutdownCleanupService>();
-builder.Services.AddHostedService<TrayApplication>();
+builder.Services.AddSingleton<TrayApplication>();
+builder.Services.AddHostedService(serviceProvider => serviceProvider.GetRequiredService<TrayApplication>());
+builder.Services.AddHostedService<SingleInstanceActivationService>();
 builder.Services.AddHostedService<StartupAutomation>();
+builder.Services.AddHostedService<StartupUpdateService>();
 
 var app = builder.Build();
 app.UseDefaultFiles();
@@ -53,9 +62,15 @@ app.MapGet("/api/qr", (LanAddressService lan) =>
     return Results.File(qr.GetGraphic(8), "image/png");
 });
 
-app.MapPost("/api/stream/start", async (StartStreamRequest request, StreamCoordinator stream, CancellationToken ct) =>
+app.MapPost("/api/stream/start", async (StartStreamRequest request, StreamCoordinator stream, LanternSettingsService settingsService, CancellationToken ct) =>
 {
     var result = await stream.StartAsync(request, ct);
+    if (result.Success && stream.SelectedDisplay is { } selectedDisplay)
+    {
+        var settings = await settingsService.GetAsync();
+        settings.PreferredDisplayName = selectedDisplay.Name;
+        await settingsService.SaveAsync(settings);
+    }
     return result.Success ? Results.Ok(result) : Results.BadRequest(result);
 });
 app.MapPost("/api/stream/stop", async (StreamCoordinator stream) => { await stream.StopAsync(); return Results.Ok(); });
@@ -109,6 +124,31 @@ app.MapPost("/api/settings", async (HttpContext context, LanternSettings value, 
     await settings.SaveAsync(value);
     return Results.Ok(new { message = "Ayarlar kaydedildi." });
 });
+app.MapGet("/api/update/check", async (HttpContext context, bool manual, UpdateService updates, CancellationToken ct) =>
+{
+    if (context.Connection.RemoteIpAddress is not { } address || !System.Net.IPAddress.IsLoopback(address))
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    try { return Results.Ok(await updates.CheckAsync(manual, ct)); }
+    catch (Exception ex) { return Results.Problem($"Güncelleme denetlenemedi: {ex.Message}"); }
+});
+app.MapPost("/api/update/install", async (HttpContext context, UpdateService updates, CancellationToken ct) =>
+{
+    if (context.Connection.RemoteIpAddress is not { } address || !System.Net.IPAddress.IsLoopback(address))
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    try { return Results.Ok(new { version = await updates.DownloadAndInstallAsync(ct) }); }
+    catch (Exception ex) { return Results.Problem($"Güncelleme yüklenemedi: {ex.Message}"); }
+});
+app.MapPost("/api/update/preference", async (HttpContext context, UpdatePreference value, LanternSettingsService settings) =>
+{
+    if (context.Connection.RemoteIpAddress is not { } address || !System.Net.IPAddress.IsLoopback(address))
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    var current = await settings.GetAsync();
+    if (value.Disable) current.CheckForUpdates = false;
+    if (!string.IsNullOrWhiteSpace(value.SkipVersion)) current.SkippedUpdateVersion = value.SkipVersion;
+    await settings.SaveAsync(current);
+    return Results.Ok();
+});
 app.Run();
 
 public partial class Program;
+public sealed record UpdatePreference(bool Disable, string? SkipVersion);
