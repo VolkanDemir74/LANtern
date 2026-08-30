@@ -1,10 +1,16 @@
-# LANtern v0.1.1-alpha
+# LANtern v0.1.2-alpha
 
-This alpha update improves the installed desktop experience.
+This alpha update completes the LANtern product rename and improves application, tray, and virtual-display lifecycle behavior.
 
-## Fixed
+## Improved
 
-- LANtern now starts as a Windows tray application without opening a command window.
+- The project, executable, solutions, namespaces, driver, and virtual-display device now consistently use the LANtern name.
+- LANtern opens the control panel by default on a normal launch.
+- The optional **Start in tray** setting keeps the panel closed.
+- When starting in tray, LANtern displays a clickable startup card near the notification area.
+- The tray tooltip clearly indicates that LANtern is running in the background.
+- Closing LANtern now stops streaming, disconnects the active virtual monitor, and cleans up child processes.
+- Virtual-display service installation and removal are handled by the native LANtern device helper.
 
 ## Included
 
@@ -12,7 +18,7 @@ This alpha update improves the installed desktop experience.
 - WebRTC video streaming through MediaMTX
 - H.264 hardware encoding support
 - Physical display capture
-- 1920x1080 virtual display prototype
+- 1920x1080 virtual Windows monitor
 - Windows tray controls
 - Turkish and English control panel
 - QR viewer link

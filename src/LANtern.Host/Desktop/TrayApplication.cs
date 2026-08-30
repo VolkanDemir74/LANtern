@@ -23,23 +23,20 @@ public sealed class TrayApplication : IHostedService, IDisposable
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _lifetime.ApplicationStarted.Register(() =>
-        {
-            _thread = new Thread(RunTray) { IsBackground = true, Name = "LANtern Tray" };
-            _thread.SetApartmentState(ApartmentState.STA);
-            _thread.Start();
-            _ = OpenAdminWhenRequestedAsync();
-        });
+        _lifetime.ApplicationStarted.Register(() => _ = StartDesktopAsync());
         return Task.CompletedTask;
     }
 
-    private async Task OpenAdminWhenRequestedAsync()
+    private async Task StartDesktopAsync()
     {
         var settings = await _settings.GetAsync();
+        _thread = new Thread(() => RunTray(settings.StartInTray)) { IsBackground = true, Name = "LANtern Tray" };
+        _thread.SetApartmentState(ApartmentState.STA);
+        _thread.Start();
         if (!settings.StartInTray) OpenAdmin();
     }
 
-    private void RunTray()
+    private void RunTray(bool showStartupNotice)
     {
         _dispatcher = new Control();
         _dispatcher.CreateControl();
@@ -72,7 +69,13 @@ public sealed class TrayApplication : IHostedService, IDisposable
 
         var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "LANtern.ico");
         var trayIcon = File.Exists(iconPath) ? new Icon(iconPath) : Icon.ExtractAssociatedIcon(Environment.ProcessPath!) ?? SystemIcons.Application;
-        _icon = new NotifyIcon { Icon = trayIcon, Text = "LANtern", Visible = true, ContextMenuStrip = menu };
+        _icon = new NotifyIcon
+        {
+            Icon = trayIcon,
+            Text = "LANtern arka planda çalışıyor",
+            Visible = true,
+            ContextMenuStrip = menu
+        };
         _icon.DoubleClick += (_, _) => OpenAdmin();
         UpdateMenu(monitor, broadcast);
         var turkish = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("tr", StringComparison.OrdinalIgnoreCase);
@@ -80,8 +83,90 @@ public sealed class TrayApplication : IHostedService, IDisposable
         _icon.BalloonTipText = turkish
             ? "Arka planda çalışıyorum. Yönetim paneli için simgeye çift tıkla."
             : "Running in the background. Double-click the icon to open the control panel.";
-        _icon.ShowBalloonTip(4000);
+        // Windows 11 can discard a balloon requested before the tray message
+        // loop is ready, so show it shortly after the loop starts.
+        System.Windows.Forms.Timer? startupNotification = null;
+        if (showStartupNotice)
+        {
+            startupNotification = new System.Windows.Forms.Timer { Interval = 1200 };
+            startupNotification.Tick += (_, _) =>
+            {
+                startupNotification.Stop();
+                _icon?.ShowBalloonTip(5000);
+                ShowStartupNotice(turkish, trayIcon);
+                startupNotification.Dispose();
+            };
+            startupNotification.Start();
+        }
         Application.Run();
+    }
+
+    private void ShowStartupNotice(bool turkish, Icon icon)
+    {
+        var notice = new Form
+        {
+            AutoScaleMode = AutoScaleMode.Dpi,
+            BackColor = Color.FromArgb(15, 25, 41),
+            ClientSize = new Size(360, 92),
+            FormBorderStyle = FormBorderStyle.None,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            TopMost = true
+        };
+
+        var workingArea = Screen.PrimaryScreen?.WorkingArea ?? Screen.GetWorkingArea(Cursor.Position);
+        notice.Location = new Point(workingArea.Right - notice.Width - 16, workingArea.Bottom - notice.Height - 16);
+
+        var iconView = new PictureBox
+        {
+            Image = icon.ToBitmap(),
+            Location = new Point(18, 22),
+            Size = new Size(48, 48),
+            SizeMode = PictureBoxSizeMode.Zoom
+        };
+        var title = new Label
+        {
+            AutoSize = true,
+            Font = new Font("Segoe UI", 11, FontStyle.Bold),
+            ForeColor = Color.White,
+            Location = new Point(82, 17),
+            Text = turkish ? "LANtern burada!" : "LANtern is here!"
+        };
+        var message = new Label
+        {
+            AutoSize = false,
+            Font = new Font("Segoe UI", 9),
+            ForeColor = Color.FromArgb(174, 199, 232),
+            Location = new Point(82, 43),
+            Size = new Size(260, 38),
+            Text = turkish
+                ? "Arka planda çalışıyor. Paneli açmak için tıkla."
+                : "Running in the background. Click to open the panel."
+        };
+
+        notice.Controls.AddRange([iconView, title, message]);
+        void OpenFromNotice(object? _, EventArgs __) { OpenAdmin(); notice.Close(); }
+        notice.Click += OpenFromNotice;
+        iconView.Click += OpenFromNotice;
+        title.Click += OpenFromNotice;
+        message.Click += OpenFromNotice;
+
+        var closeTimer = new System.Windows.Forms.Timer { Interval = 6000 };
+        closeTimer.Tick += (_, _) =>
+        {
+            closeTimer.Stop();
+            closeTimer.Dispose();
+            if (!notice.IsDisposed) notice.Close();
+        };
+        notice.FormClosed += (_, _) =>
+        {
+            closeTimer.Stop();
+            closeTimer.Dispose();
+            iconView.Image?.Dispose();
+            notice.Dispose();
+        };
+        closeTimer.Start();
+        notice.Show();
     }
 
     private void UpdateMenu(ToolStripItem monitor, ToolStripItem broadcast)
