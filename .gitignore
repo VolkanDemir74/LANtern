@@ -1,0 +1,43 @@
+# Visual Studio / .NET
+.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+.dotnet-cli/
+
+# Native and driver build output
+**/x64/
+**/Debug/
+**/Release/
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.tlog
+*.recipe
+
+# Publish and installer output
+artifacts/
+
+# Local logs and state
+*.log
+*.tmp
+*.bak
+virtual-display-install.log
+
+# Certificates and signing material
+*.cer
+*.pfx
+*.p12
+*.pvk
+*.snk
+
+# Downloaded upstream source trees
+external/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

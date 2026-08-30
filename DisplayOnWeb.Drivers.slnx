@@ -1,0 +1,9 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="drivers/DisplayOnWeb.VirtualDisplay/IddSampleDriver.vcxproj" />
+  <Project Path="tools/DisplayOnWeb.VirtualDisplay.Device/IddSampleApp.vcxproj" />
+</Solution>
