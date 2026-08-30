@@ -11,6 +11,8 @@
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows-0078D4">
   <img alt=".NET" src="https://img.shields.io/badge/.NET-8-512BD4">
   <img alt="Streaming" src="https://img.shields.io/badge/streaming-WebRTC-FFB000">
+  <img alt="Viewer" src="https://img.shields.io/badge/viewer-no_installation-2EA44F">
+  <img alt="Cost" src="https://img.shields.io/badge/cost-free-2EA44F">
   <img alt="Release" src="https://img.shields.io/badge/release-v0.1.5--alpha-orange">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
 </p>
@@ -19,7 +21,13 @@
 
 LANtern turns a phone, tablet, laptop, or desktop browser into a dedicated display for a Windows PC. Its virtual display driver adds a real 1920x1080 monitor to Windows, which can be extended, arranged, and used like another screen. LANtern captures that monitor and delivers it to the browser through low-latency WebRTC video.
 
-An existing physical monitor can also be streamed when a virtual display is not needed. The viewing device requires no native application. LANtern is designed for **LAN-only**, view-only use on trusted private networks.
+An existing physical monitor can also be streamed when a virtual display is not needed. LANtern is designed for **LAN-only**, view-only use on trusted private networks.
+
+## No viewer app required
+
+Install LANtern only on the Windows host PC. Phones, tablets, laptops, smart displays, and other viewing devices connect through a current web browser. There is no client application to download, no account, no subscription, and no session time limit.
+
+LANtern is completely free and open source under the MIT License. The source code, Windows installer, and release checksums are published in this repository.
 
 > [!IMPORTANT]
 > LANtern is currently an alpha release intended for testing on trusted private networks. The installer contains a development-signed virtual display driver. Windows may display an unknown publisher or certificate warning.
@@ -38,7 +46,7 @@ After installation:
 4. Start the stream.
 5. Scan the QR code with the viewing device.
 
-The viewing device only needs a current web browser and access to the same private Wi-Fi or Ethernet network.
+The viewing device only needs a current web browser and access to the same private Wi-Fi or Ethernet network. Nothing is installed on the viewing device.
 
 ## Highlights
 
@@ -284,6 +292,8 @@ Projenin geliştirme sürecindeki bazı çalışmalarda yapay zeka destekli ara�
 ## Türkçe kısa açıklama
 
 LANtern, Windows'a 1920x1080 sanal bir monitör ekler ve bu monitörü aynı yerel ağdaki modern tarayıcılarda düşük gecikmeyle görüntüler. Böylece telefon, tablet veya başka bir bilgisayar yalnızca ekran yansıtmakla kalmaz, Windows'un bağımsız ikinci ekranı olarak kullanılabilir. İzleme cihazına uygulama kurulması gerekmez.
+
+LANtern yalnızca Windows ana bilgisayarına kurulur. İzleme cihazında güncel bir web tarayıcısı yeterlidir. İstemci uygulaması, hesap, abonelik veya oturum süresi sınırı yoktur. LANtern tamamen ücretsiz ve açık kaynaklıdır.
 
 İstenirse mevcut fiziksel monitörlerden biri de yayınlanabilir. LANtern yalnızca güvenilir yerel ağlarda, görüntüleme amaçlı kullanım için tasarlanmıştır.
 
