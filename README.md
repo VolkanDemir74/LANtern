@@ -11,7 +11,8 @@
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows-0078D4">
   <img alt=".NET" src="https://img.shields.io/badge/.NET-8-512BD4">
   <img alt="Streaming" src="https://img.shields.io/badge/streaming-WebRTC-FFB000">
-  <img alt="Status" src="https://img.shields.io/badge/status-developer%20preview-orange">
+  <img alt="Release" src="https://img.shields.io/badge/release-v0.1.0--alpha-orange">
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
 </p>
 
 ## What is LANtern?
@@ -21,7 +22,21 @@ LANtern is a Windows host application that streams a selected display to another
 The project is designed for **LAN-only** use. The current version focuses on local, view-only video streaming.
 
 > [!IMPORTANT]
-> LANtern is currently a developer preview. The streaming host and virtual display work, but the one-click installer and production driver-signing workflow are still under development.
+> LANtern is currently an alpha release intended for testing on trusted private networks. The installer contains a development-signed virtual display driver. Windows may display an unknown publisher or certificate warning.
+
+## Install LANtern
+
+Download `LANtern-Setup-x64.exe` from [GitHub Releases](https://github.com/VolkanDemir74/LANtern/releases) and run it as an administrator. The installer includes the Windows host, browser interface, FFmpeg, MediaMTX, virtual display service, and development-signed driver.
+
+After installation:
+
+1. Start LANtern from the Start menu.
+2. Open the tray icon and select **Open control panel**.
+3. Connect the virtual monitor, or select an existing physical display.
+4. Start the stream.
+5. Scan the QR code with the viewing device.
+
+The viewing device only needs a current web browser and access to the same private Wi-Fi or Ethernet network.
 
 ## Highlights
 
@@ -74,17 +89,24 @@ The ASP.NET Core host serves the viewer and control panel on the local network. 
 | Virtual 1080p display prototype | Internet access or cloud relay |
 | Hardware H.264 encoding | TURN/STUN-based remote connectivity |
 | QR-based viewer access | Production-signed public driver package |
-| Tray and startup automation | Final one-click installer |
+| Tray, installer, and startup automation | Production code-signed installer |
 
 ## Requirements
 
-### Host application
+### Installed application
 
 - Windows 10 version 1903 or newer, or Windows 11
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- Visual Studio with the **ASP.NET and web development** workload, or the .NET CLI
-- FFmpeg with the required capture and H.264 encoder support
+- x64 processor
+- A current Chrome, Edge, Safari, or Firefox browser on the viewing device
 - A Windows network profile configured as **Private**
+
+The installer includes the .NET runtime and streaming components. Visual Studio and the .NET SDK are only needed when building the source code.
+
+### Source development
+
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- Visual Studio with the **ASP.NET and web development** workload
+- FFmpeg and MediaMTX for local development
 
 ### Virtual display development
 
@@ -92,7 +114,7 @@ The ASP.NET Core host serves the viewer and control panel on the local network. 
 - Windows SDK and Windows Driver Kit (WDK)
 - x64 MSVC build tools
 
-The virtual display driver must be signed appropriately. Development certificates are suitable for local testing only; public distribution requires a Microsoft-approved driver-signing workflow.
+The current alpha package uses a development certificate. A stable public package requires a Microsoft-approved driver-signing workflow.
 
 ## Run from Visual Studio
 
@@ -121,6 +143,20 @@ LAN viewer:    http://192.168.x.x:5000/
 ```
 
 System-changing controls such as virtual-monitor management and persistent Windows settings are restricted to the local host control panel.
+
+## Build the installer
+
+Run the packaging script from an elevated PowerShell terminal after installing Inno Setup 6 and the driver development requirements:
+
+```powershell
+.\scripts\Build-Installer.ps1 -DevelopmentDriver
+```
+
+The generated package is written to:
+
+```text
+artifacts\installer\LANtern-Setup-x64.exe
+```
 
 ## Virtual display
 
@@ -173,7 +209,7 @@ scripts/                               Development install and firewall scripts
 - [x] QR viewer link
 - [x] Tray application and persistent settings
 - [x] 1080p virtual display prototype
-- [ ] Single-file Windows installer and clean uninstaller
+- [x] Windows installer and uninstaller
 - [ ] Production driver signing and packaging
 - [ ] PIN-based viewer authentication
 - [ ] mDNS discovery (`lantern.local`)
@@ -198,7 +234,7 @@ Created by **Volkan Demir**
 
 ## Türkçe kısa açıklama
 
-LANtern, Windows ekranını aynı yerel ağdaki modern tarayıcılara düşük gecikmeyle aktaran açık kaynak olarak yayımlanması planlanan bir projedir. Telefon, tablet veya başka bir bilgisayara istemci uygulaması kurmak gerekmez. Proje yalnızca güvenilir yerel ağ kullanımı için tasarlanmıştır.
+LANtern, Windows ekranını aynı yerel ağdaki modern tarayıcılara düşük gecikmeyle aktaran açık kaynak bir projedir. Telefon, tablet veya başka bir bilgisayara istemci uygulaması kurmak gerekmez. Proje yalnızca güvenilir yerel ağ kullanımı için tasarlanmıştır.
 
 Geliştirme kurulumu, özellikler ve güvenlik ayrıntıları için yukarıdaki İngilizce belgelendirmeyi inceleyebilirsiniz. Türkçe arayüz uygulamanın yönetim panelinden seçilebilir.
 
