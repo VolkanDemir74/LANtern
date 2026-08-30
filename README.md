@@ -232,6 +232,12 @@ Issues and pull requests are welcome. Streaming problem reports should include:
 Created by **Volkan Demir**  
 [github.com/VolkanDemir74](https://github.com/VolkanDemir74)
 
+## Development note
+
+AI-assisted tools were used in some parts of the development process. Project direction, design decisions, testing, and final review are maintained by the author.
+
+Projenin geliştirme sürecindeki bazı çalışmalarda yapay zeka destekli araçlardan yararlanılmıştır. Proje yönü, tasarım kararları, testler ve son kontroller geliştirici tarafından yürütülmektedir.
+
 ## Türkçe kısa açıklama
 
 LANtern, Windows ekranını aynı yerel ağdaki modern tarayıcılara düşük gecikmeyle aktaran açık kaynak bir projedir. Telefon, tablet veya başka bir bilgisayara istemci uygulaması kurmak gerekmez. Proje yalnızca güvenilir yerel ağ kullanımı için tasarlanmıştır.
