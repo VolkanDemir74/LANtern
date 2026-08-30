@@ -4,7 +4,7 @@
 
 <p align="center">
   <strong>Your screen, anywhere on your LAN.</strong><br>
-  Turn any modern browser into a low-latency display for your Windows PC—without installing a client app.
+  Use a modern browser as a low-latency display for your Windows PC over your local network.
 </p>
 
 <p align="center">
@@ -16,16 +16,16 @@
 
 ## What is LANtern?
 
-LANtern is a Windows host application that streams a selected display to phones, tablets, laptops, Macs, and other devices on the same local network. The receiving device only needs a modern web browser.
+LANtern is a Windows host application that streams a selected display to another device on the same local network. Viewing takes place directly in a modern web browser.
 
-The project is designed to remain **LAN-only**. It does not provide cloud relay, internet-facing access, remote desktop control, audio capture, or input forwarding in its current version.
+The project is designed for **LAN-only** use. The current version focuses on local, view-only video streaming.
 
 > [!IMPORTANT]
 > LANtern is currently a developer preview. The streaming host and virtual display work, but the one-click installer and production driver-signing workflow are still under development.
 
 ## Highlights
 
-- Browser-based viewing—no iOS, Android, macOS, or client application required
+- Browser-based viewing with no client installation
 - Low-latency WebRTC video over the local network
 - H.264 hardware encoding with NVIDIA NVENC support
 - Intel Quick Sync, AMD AMF, and software H.264 fallback paths
@@ -60,7 +60,7 @@ Windows display / LANtern virtual monitor
              MediaMTX / WebRTC
                   │
                   ▼
-      Safari, Chrome, Edge, or Firefox
+             Modern browser
 ```
 
 The ASP.NET Core host serves the viewer and control panel on the local network. FFmpeg captures and encodes the selected Windows display, while MediaMTX exposes the stream to the browser through WebRTC.
@@ -127,11 +127,11 @@ System-changing controls such as virtual-monitor management and persistent Windo
 LANtern includes an Indirect Display Driver prototype based on Microsoft's Indirect Display sample architecture. Windows sees it as an additional 1920×1080, 60 Hz monitor:
 
 ```text
-Display 1 — Physical monitor
-Display 2 — LANtern Virtual Monitor
+Display 1: Physical monitor
+Display 2: LANtern Virtual Monitor
 ```
 
-This makes it possible to extend the Windows desktop and stream a dedicated second display instead of mirroring an ultrawide primary monitor.
+This makes it possible to extend the Windows desktop and stream a dedicated second display. The primary monitor can keep its original resolution and content.
 
 Driver projects are available in `DisplayOnWeb.Drivers.slnx`. Development install and uninstall scripts are located under `scripts/`.
 
@@ -143,9 +143,9 @@ LANtern stores per-user settings under:
 %LocalAppData%\LANtern\settings.json
 ```
 
-The control panel can remember the selected display, resolution, frame rate, bitrate, encoder, scaling mode, and cursor preference. Optional startup behavior can launch LANtern with Windows, connect the virtual monitor, and start the saved stream automatically.
+The control panel stores the selected display and streaming profile. Startup options can prepare the virtual monitor and saved stream automatically.
 
-The control panel does not open at Windows startup unless that option is explicitly enabled.
+Opening the control panel at Windows startup is an optional setting and is disabled by default.
 
 ## LAN-only security model
 
@@ -183,12 +183,12 @@ tests/                                 Automated tests
 
 ## Contributing
 
-Issues, test reports, documentation improvements, and pull requests are welcome. When reporting a streaming problem, please include:
+Issues and pull requests are welcome. Streaming problem reports should include:
 
 - Windows version
 - GPU and driver version
 - Browser and client device
-- Selected resolution, FPS, bitrate, and encoder
+- Selected streaming profile
 - Whether a physical or LANtern virtual display was used
 - Relevant host logs with private network details removed
 
@@ -196,8 +196,6 @@ Issues, test reports, documentation improvements, and pull requests are welcome.
 
 Created by **Volkan Demir**  
 [github.com/VolkanDemir74](https://github.com/VolkanDemir74)
-
-AI assistance was used at certain points during the development of this project.
 
 ## Türkçe kısa açıklama
 
