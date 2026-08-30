@@ -19,7 +19,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=..\artifacts\installer
 OutputBaseFilename=LANtern-Setup-x64
-SetupIconFile=..\src\DisplayOnWeb.Host\Assets\LANtern.ico
+SetupIconFile=..\src\LANtern.Host\Assets\LANtern.ico
 UninstallDisplayIcon={app}\LANtern.exe
 Compression=lzma2/ultra64
 SolidCompression=yes
@@ -46,24 +46,20 @@ Name: "{autodesktop}\LANtern"; Filename: "{app}\LANtern.exe"; Tasks: desktopicon
 
 [Run]
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM LANtern.exe"; Flags: runhidden waituntilterminated; StatusMsg: "Eski LANtern işlemleri kapatılıyor..."; Check: IsUpgrade
-Filename: "{sys}\sc.exe"; Parameters: "stop LANternDeviceService"; Flags: runhidden waituntilterminated; Check: IsUpgrade
-Filename: "{sys}\sc.exe"; Parameters: "delete LANternDeviceService"; Flags: runhidden waituntilterminated; Check: IsUpgrade
+Filename: "{app}\LANtern.DeviceService.exe"; Parameters: "--uninstall"; Flags: runhidden waituntilterminated; Check: IsUpgrade
 #ifdef DevelopmentDriver
 Filename: "{sys}\certutil.exe"; Parameters: "-f -addstore Root ""{app}\driver\LANtern-Test.cer"""; Flags: runhidden waituntilterminated
 Filename: "{sys}\certutil.exe"; Parameters: "-f -addstore TrustedPublisher ""{app}\driver\LANtern-Test.cer"""; Flags: runhidden waituntilterminated
 #endif
 Filename: "{sys}\pnputil.exe"; Parameters: "/add-driver ""{app}\driver\IddSampleDriver.inf"" /install"; Flags: runhidden waituntilterminated; StatusMsg: "LANtern sanal monitör sürücüsü kuruluyor..."
-Filename: "{sys}\sc.exe"; Parameters: "create LANternDeviceService binPath= """"{app}\LANtern.DeviceService.exe"" --service"" start= auto DisplayName= ""LANtern Device Service"""; Flags: runhidden waituntilterminated
-Filename: "{sys}\sc.exe"; Parameters: "description LANternDeviceService ""LANtern sanal monitörünü güvenli şekilde yönetir."""; Flags: runhidden waituntilterminated
-Filename: "{sys}\sc.exe"; Parameters: "start LANternDeviceService"; Flags: runhidden waituntilterminated
+Filename: "{app}\LANtern.DeviceService.exe"; Parameters: "--install"; Flags: runhidden waituntilterminated
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""LANtern LAN HTTP"""; Flags: runhidden waituntilterminated
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""LANtern LAN HTTP"" dir=in action=allow program=""{app}\LANtern.exe"" protocol=TCP localport=5000 profile=private enable=yes"; Flags: runhidden waituntilterminated
 Filename: "{app}\LANtern.exe"; Description: "LANtern'ı çalıştır / Launch LANtern"; Flags: nowait postinstall skipifsilent; Tasks: launch
 
 [UninstallRun]
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM LANtern.exe"; Flags: runhidden waituntilterminated; RunOnceId: "StopHost"
-Filename: "{sys}\sc.exe"; Parameters: "stop LANternDeviceService"; Flags: runhidden waituntilterminated; RunOnceId: "StopDeviceService"
-Filename: "{sys}\sc.exe"; Parameters: "delete LANternDeviceService"; Flags: runhidden waituntilterminated; RunOnceId: "DeleteDeviceService"
+Filename: "{app}\LANtern.DeviceService.exe"; Parameters: "--uninstall"; Flags: runhidden waituntilterminated; RunOnceId: "RemoveDeviceService"
 Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\Uninstall-LANternDriver.ps1"""; Flags: runhidden waituntilterminated; RunOnceId: "RemoveDriver"
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""LANtern LAN HTTP"""; Flags: runhidden waituntilterminated; RunOnceId: "RemoveFirewall"
 

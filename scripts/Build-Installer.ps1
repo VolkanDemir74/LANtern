@@ -13,9 +13,9 @@ $publishRoot = Join-Path $artifactsRoot 'publish\win-x64'
 $stageRoot = Join-Path $artifactsRoot 'installer-stage'
 $outputRoot = Join-Path $artifactsRoot 'installer'
 $nativeOutput = Join-Path $artifactsRoot 'native'
-$hostProject = Join-Path $repoRoot 'src\DisplayOnWeb.Host\DisplayOnWeb.Host.csproj'
-$nativeProject = Join-Path $repoRoot 'tools\DisplayOnWeb.VirtualDisplay.Device\IddSampleApp.vcxproj'
-$driverProject = Join-Path $repoRoot 'drivers\DisplayOnWeb.VirtualDisplay\IddSampleDriver.vcxproj'
+$hostProject = Join-Path $repoRoot 'src\LANtern.Host\LANtern.Host.csproj'
+$nativeProject = Join-Path $repoRoot 'tools\LANtern.VirtualDisplay.Device\IddSampleApp.vcxproj'
+$driverProject = Join-Path $repoRoot 'drivers\LANtern.VirtualDisplay\IddSampleDriver.vcxproj'
 
 function Find-Executable([string]$Name, [string]$ExplicitPath) {
     if ($ExplicitPath) {
@@ -66,9 +66,9 @@ if (Test-Path -LiteralPath (Join-Path $ffmpegRoot 'README.txt')) { Copy-Item -Li
 Copy-Item -LiteralPath $mediamtx -Destination (Join-Path $resolvedStage 'mediamtx.exe') -Force
 if (Test-Path -LiteralPath (Join-Path (Split-Path $mediamtx) 'LICENSE')) { Copy-Item -LiteralPath (Join-Path (Split-Path $mediamtx) 'LICENSE') -Destination (Join-Path $resolvedStage 'licenses\MediaMTX-LICENSE.txt') -Force }
 Copy-Item -LiteralPath (Join-Path $nativeOutput 'IddSampleApp.exe') -Destination (Join-Path $resolvedStage 'LANtern.DeviceService.exe') -Force
-Copy-Item -Path (Join-Path $repoRoot 'drivers\DisplayOnWeb.VirtualDisplay\x64\Release\IddSampleDriver\*') -Destination (Join-Path $resolvedStage 'driver') -Recurse -Force
+Copy-Item -Path (Join-Path $repoRoot 'drivers\LANtern.VirtualDisplay\x64\Release\IddSampleDriver\*') -Destination (Join-Path $resolvedStage 'driver') -Recurse -Force
 if ($DevelopmentDriver) {
-    $testCertificate = Join-Path $repoRoot 'drivers\DisplayOnWeb.VirtualDisplay\x64\Release\IddSampleDriver.cer'
+    $testCertificate = Join-Path $repoRoot 'drivers\LANtern.VirtualDisplay\x64\Release\IddSampleDriver.cer'
     if (-not (Test-Path -LiteralPath $testCertificate)) { throw 'Development driver sertifikası bulunamadı.' }
     Copy-Item -LiteralPath $testCertificate -Destination (Join-Path $resolvedStage 'driver\LANtern-Test.cer') -Force
 }

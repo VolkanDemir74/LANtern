@@ -1,0 +1,118 @@
+using System.Diagnostics;
+using LANtern.Host.Capture;
+using Microsoft.Extensions.Options;
+
+namespace LANtern.Host.Streaming;
+
+public sealed class StreamCoordinator : IDisposable
+{
+    private readonly DisplayCatalog _displays;
+    private readonly FfmpegLocator _ffmpeg;
+    private readonly StreamOptions _defaults;
+    private readonly ILogger<StreamCoordinator> _logger;
+    private readonly MediaMtxService _mediaMtx;
+    private readonly ChildProcessJob _job;
+    private Process? _process;
+
+    public bool IsRunning => _process is { HasExited: false };
+    public DisplayInfo? SelectedDisplay { get; private set; }
+    public string ActiveEncoder { get; private set; } = "Başlatılmadı";
+    public string? LastError { get; private set; }
+    public long ReceivedPackets => Interlocked.Read(ref _receivedPackets);
+
+    public StreamCoordinator(DisplayCatalog displays, FfmpegLocator ffmpeg, IOptions<StreamOptions> defaults, ILogger<StreamCoordinator> logger, MediaMtxService mediaMtx, ChildProcessJob job)
+        => (_displays, _ffmpeg, _defaults, _logger, _mediaMtx, _job) = (displays, ffmpeg, defaults.Value, logger, mediaMtx, job);
+
+    public async Task<OperationResult> StartAsync(StartStreamRequest request, CancellationToken ct)
+    {
+        await StopAsync();
+        _job.StopOrphanedLANternProcesses();
+        LastError = null;
+        Interlocked.Exchange(ref _receivedPackets, 0);
+        var executable = _ffmpeg.Find();
+        if (executable is null) return Fail("ffmpeg.exe bulunamadı. README'deki FFmpeg Shared kurulumunu yapın veya ffmpeg.exe dosyasını uygulamanın yanına koyun.");
+
+        var displays = _displays.GetDisplays();
+        if (request.DisplayIndex < 0 || request.DisplayIndex >= displays.Count) return Fail("Geçersiz ekran seçimi.");
+        SelectedDisplay = displays[request.DisplayIndex];
+
+        var available = await _ffmpeg.GetEncodersAsync(executable, ct);
+        ActiveEncoder = ChooseEncoder(request.Encoder, available);
+        var gateway = await _mediaMtx.StartAsync();
+        if (!gateway.Success) return Fail(gateway.Message);
+
+        var args = BuildArguments(SelectedDisplay, request, ActiveEncoder, _mediaMtx.PublisherUrl);
+        _logger.LogInformation("FFmpeg başlatılıyor: {Executable} {Arguments}", executable, args);
+        var process = Process.Start(new ProcessStartInfo(executable, args)
+        {
+            UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true
+        });
+        if (process is null) return Fail("FFmpeg başlatılamadı.");
+        _process = process;
+        _job.Add(process);
+        _ = MonitorAsync(process);
+        await Task.Delay(800, ct);
+        return process.HasExited ? Fail(LastError ?? "FFmpeg erken kapandı.") : new(true, $"{SelectedDisplay.Name}, {ActiveEncoder} ile yayın başladı.");
+    }
+
+    public async Task StopAsync()
+    {
+        var process = Interlocked.Exchange(ref _process, null);
+        if (process is { HasExited: false })
+        {
+            process.Kill(true);
+            await process.WaitForExitAsync();
+        }
+        process?.Dispose();
+    }
+
+    private async Task MonitorAsync(Process process)
+    {
+        var error = await process.StandardError.ReadToEndAsync();
+        await process.WaitForExitAsync();
+        if (process.ExitCode != 0)
+        {
+            LastError = "Video kodlayıcı beklenmedik biçimde kapandı. Ayrıntılar uygulama konsoluna yazıldı.";
+            _logger.LogError("FFmpeg hata çıktısı: {Error}", error);
+        }
+    }
+
+    private static string ChooseEncoder(string requested, IReadOnlyList<string> available)
+    {
+        if (!string.Equals(requested, "auto", StringComparison.OrdinalIgnoreCase) && available.Contains(requested)) return requested;
+        return available.FirstOrDefault() ?? "libx264";
+    }
+
+    private static string BuildArguments(DisplayInfo display, StartStreamRequest request, string encoder, string publisherUrl)
+    {
+        // Keep recovery fast while RTX/NACK retransmission is not available.
+        var keyFrameInterval = Math.Max(1, request.Fps / 4);
+        var common = $"-hide_banner -loglevel warning -an -c:v {encoder} -b:v {request.BitrateKbps}k -maxrate {request.BitrateKbps}k -bufsize {Math.Max(1000, request.BitrateKbps / 4)}k -g {keyFrameInterval} -keyint_min {keyFrameInterval} -sc_threshold 0 -bf 0";
+        var tuning = encoder switch
+        {
+            "h264_nvenc" => "-preset p1 -tune ull -rc cbr -profile:v baseline -forced-idr 1 -zerolatency 1 -aud 1",
+            "h264_qsv" => "-preset veryfast -low_power 1 -profile:v baseline",
+            "h264_amf" => "-usage ultralowlatency -quality speed -profile:v baseline",
+            _ => "-preset ultrafast -tune zerolatency -profile:v baseline"
+        };
+        // Desktop Duplication keeps the frame and cursor composition on the GPU.
+        // With a native-size NVENC stream no GPU-to-CPU copy or software scaling is needed.
+        var directGpuCapture = encoder == "h264_nvenc" && display.Width == request.Width && display.Height == request.Height;
+        if (directGpuCapture)
+        {
+            var ddaInput = $"-f lavfi -i \"ddagrab=output_idx={display.Index}:draw_mouse={(request.CaptureCursor ? 1 : 0)}:framerate={request.Fps}:output_fmt=8bit\"";
+            return $"{ddaInput} {common} {tuning} -bsf:v dump_extra=freq=keyframe -rtsp_transport tcp -muxdelay 0 -f rtsp \"{publisherUrl}\"";
+        }
+
+        // Compatibility fallback for software encoders and resized captures.
+        var input = $"-f gdigrab -draw_mouse 0 -framerate {request.Fps} -offset_x {display.X} -offset_y {display.Y} -video_size {display.Width}x{display.Height} -i desktop";
+        var scale = string.Equals(request.ScalingMode, "fit", StringComparison.OrdinalIgnoreCase)
+            ? $"-vf scale={request.Width}:{request.Height}:force_original_aspect_ratio=decrease,pad={request.Width}:{request.Height}:(ow-iw)/2:(oh-ih)/2"
+            : $"-vf scale={request.Width}:{request.Height}:force_original_aspect_ratio=increase,crop={request.Width}:{request.Height}";
+        return $"{input} {scale} {common} {tuning} -pix_fmt yuv420p -bsf:v dump_extra=freq=keyframe -rtsp_transport tcp -muxdelay 0 -f rtsp \"{publisherUrl}\"";
+    }
+
+    private OperationResult Fail(string message) { LastError = message; return new(false, message); }
+    private long _receivedPackets;
+    public void Dispose() => StopAsync().GetAwaiter().GetResult();
+}

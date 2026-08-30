@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/DisplayOnWeb.Host/wwwroot/assets/lantern-brand.png" alt="LANtern" width="720">
+  <img src="src/LANtern.Host/wwwroot/assets/lantern-brand.png" alt="LANtern" width="720">
 </p>
 
 <p align="center">
@@ -133,21 +133,19 @@ The current alpha package uses a development certificate. A stable public packag
 
 ## Run from Visual Studio
 
-1. Open `DisplayOnWeb.slnx` in Visual Studio.
-2. Select `DisplayOnWeb.Host` as the startup project.
+1. Open `LANtern.slnx` in Visual Studio.
+2. Select `LANtern.Host` as the startup project.
 3. Run the HTTP profile.
 4. If Windows Firewall asks for access, allow **Private networks only**.
 5. Open the LANtern tray menu and select **Yönetim panelini aç / Open control panel**.
 6. Connect the virtual monitor if required, select the display, and start streaming.
 7. Scan the QR code or open the displayed LAN URL from another device.
 
-The internal solution and namespace names still use `DisplayOnWeb` while the project is being migrated to the LANtern brand.
-
 ## Run from the command line
 
 ```powershell
-dotnet restore .\src\DisplayOnWeb.Host\DisplayOnWeb.Host.csproj
-dotnet run --project .\src\DisplayOnWeb.Host\DisplayOnWeb.Host.csproj
+dotnet restore .\src\LANtern.Host\LANtern.Host.csproj
+dotnet run --project .\src\LANtern.Host\LANtern.Host.csproj
 ```
 
 The default web server port is `5000`:
@@ -186,7 +184,7 @@ The Windows desktop can be extended onto this monitor just like a connected phys
 
 The virtual monitor can be connected or disconnected from the control panel and tray menu. Startup settings can connect it automatically and begin streaming with the saved profile.
 
-Driver projects are available in `DisplayOnWeb.Drivers.slnx`. Development install and uninstall scripts are located under `scripts/`.
+Driver projects are available in `LANtern.Drivers.slnx`. Development install and uninstall scripts are located under `scripts/`.
 
 ## Settings and startup behavior
 
@@ -198,9 +196,11 @@ LANtern stores per-user settings under:
 
 The control panel stores the selected display and streaming profile. Startup options can prepare the virtual monitor and saved stream automatically.
 
-Opening the control panel at Windows startup is an optional setting and is disabled by default.
+LANtern opens the control panel when the application starts. The optional **Start in tray** setting keeps the panel closed and starts LANtern in the notification area instead.
 
-LANtern runs as a tray application without opening a command window. The control panel opens only when requested from the tray menu or when its startup option is enabled.
+LANtern runs as a Windows tray application without opening a command window.
+
+A short tray notification confirms that LANtern is running in the background. Exiting LANtern stops the stream, closes its child processes, disconnects clients, and removes the active virtual monitor. The device service remains available for the next launch and is removed by the uninstaller.
 
 ## LAN-only security model
 
@@ -219,9 +219,9 @@ Forks and third-party builds are maintained independently. They are not reviewed
 ## Project structure
 
 ```text
-src/DisplayOnWeb.Host/                 ASP.NET Core host, tray UI, and web client
-drivers/DisplayOnWeb.VirtualDisplay/   Windows Indirect Display Driver
-tools/DisplayOnWeb.VirtualDisplay.Device/  Virtual-display device helper
+src/LANtern.Host/                 ASP.NET Core host, tray UI, and web client
+drivers/LANtern.VirtualDisplay/   Windows Indirect Display Driver
+tools/LANtern.VirtualDisplay.Device/  Virtual-display device helper
 scripts/                               Development install and firewall scripts
 ```
 
