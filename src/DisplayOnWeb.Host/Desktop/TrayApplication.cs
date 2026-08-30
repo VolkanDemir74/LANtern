@@ -100,13 +100,10 @@ public sealed class TrayApplication : IHostedService, IDisposable
         MessageBox.Show(
             "LANtern\n\n" +
             "Yerel ağınızda ekran paylaşımı için açık kaynak bir projedir.\n" +
-            "Geliştirici: Volkan Demir\n" +
-            "Bu projenin geliştirilmesinde bazı noktalarda yapay zeka desteği alınmıştır.\n" +"\n" +
-          
+            "Geliştirici: Volkan Demir\n\n" +
             "An open-source project for screen sharing on your local network.\n" +
-            "Developer: Volkan Demir\n" +
-            "AI assistance was used at certain points during the development of this project.\n" ,
-            "LANtern — Hakkında / About",
+            "Developer: Volkan Demir\n",
+            "LANtern - Hakkında / About",
             MessageBoxButtons.OK,
             MessageBoxIcon.Information);
     }

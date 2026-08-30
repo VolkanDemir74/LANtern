@@ -56,10 +56,15 @@ if ($LASTEXITCODE -ne 0) { throw 'LANtern publish işlemi başarısız.' }
 $resolvedStage = [IO.Path]::GetFullPath($stageRoot)
 if (-not $resolvedStage.StartsWith([IO.Path]::GetFullPath($artifactsRoot), [StringComparison]::OrdinalIgnoreCase)) { throw 'Geçersiz stage yolu.' }
 if (Test-Path -LiteralPath $resolvedStage) { Remove-Item -LiteralPath $resolvedStage -Recurse -Force }
-New-Item -ItemType Directory -Force -Path $resolvedStage, (Join-Path $resolvedStage 'driver') | Out-Null
+New-Item -ItemType Directory -Force -Path $resolvedStage, (Join-Path $resolvedStage 'driver'), (Join-Path $resolvedStage 'licenses') | Out-Null
 Copy-Item -Path (Join-Path $publishRoot '*') -Destination $resolvedStage -Recurse -Force
 Copy-Item -LiteralPath $ffmpeg -Destination (Join-Path $resolvedStage 'ffmpeg.exe') -Force
+Get-ChildItem -LiteralPath (Split-Path $ffmpeg) -Filter '*.dll' -File | Copy-Item -Destination $resolvedStage -Force
+$ffmpegRoot = Split-Path (Split-Path $ffmpeg)
+if (Test-Path -LiteralPath (Join-Path $ffmpegRoot 'LICENSE')) { Copy-Item -LiteralPath (Join-Path $ffmpegRoot 'LICENSE') -Destination (Join-Path $resolvedStage 'licenses\FFmpeg-LICENSE.txt') -Force }
+if (Test-Path -LiteralPath (Join-Path $ffmpegRoot 'README.txt')) { Copy-Item -LiteralPath (Join-Path $ffmpegRoot 'README.txt') -Destination (Join-Path $resolvedStage 'licenses\FFmpeg-README.txt') -Force }
 Copy-Item -LiteralPath $mediamtx -Destination (Join-Path $resolvedStage 'mediamtx.exe') -Force
+if (Test-Path -LiteralPath (Join-Path (Split-Path $mediamtx) 'LICENSE')) { Copy-Item -LiteralPath (Join-Path (Split-Path $mediamtx) 'LICENSE') -Destination (Join-Path $resolvedStage 'licenses\MediaMTX-LICENSE.txt') -Force }
 Copy-Item -LiteralPath (Join-Path $nativeOutput 'IddSampleApp.exe') -Destination (Join-Path $resolvedStage 'LANtern.DeviceService.exe') -Force
 Copy-Item -Path (Join-Path $repoRoot 'drivers\DisplayOnWeb.VirtualDisplay\x64\Release\IddSampleDriver\*') -Destination (Join-Path $resolvedStage 'driver') -Recurse -Force
 if ($DevelopmentDriver) {

@@ -162,7 +162,6 @@ src/DisplayOnWeb.Host/                 ASP.NET Core host, tray UI, and web clien
 drivers/DisplayOnWeb.VirtualDisplay/   Windows Indirect Display Driver
 tools/DisplayOnWeb.VirtualDisplay.Device/  Virtual-display device helper
 scripts/                               Development install and firewall scripts
-tests/                                 Automated tests
 ```
 
 ## Roadmap
