@@ -200,6 +200,8 @@ The control panel stores the selected display and streaming profile. Startup opt
 
 Opening the control panel at Windows startup is an optional setting and is disabled by default.
 
+LANtern runs as a tray application without opening a command window. The control panel opens only when requested from the tray menu or when its startup option is enabled.
+
 ## LAN-only security model
 
 - Do not configure router port forwarding for LANtern ports.
