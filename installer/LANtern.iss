@@ -1,5 +1,5 @@
 #define MyAppName "LANtern"
-#define MyAppVersion "0.1.3"
+#define MyAppVersion "0.1.4"
 #define MyAppPublisher "Volkan Demir"
 #define MyAppURL "https://github.com/VolkanDemir74"
 #define StageDir "..\artifacts\installer-stage"
@@ -34,7 +34,6 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
-Name: "launch"; Description: "Kurulumdan sonra LANtern'ı çalıştır / Launch LANtern after setup"; Flags: checkedonce
 
 [Files]
 Source: "{#StageDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -55,7 +54,7 @@ Filename: "{sys}\pnputil.exe"; Parameters: "/add-driver ""{app}\driver\IddSample
 Filename: "{app}\LANtern.DeviceService.exe"; Parameters: "--install"; Flags: runhidden waituntilterminated
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""LANtern LAN HTTP"""; Flags: runhidden waituntilterminated
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""LANtern LAN HTTP"" dir=in action=allow program=""{app}\LANtern.exe"" protocol=TCP localport=5000 profile=private enable=yes"; Flags: runhidden waituntilterminated
-Filename: "{app}\LANtern.exe"; Description: "LANtern'ı çalıştır / Launch LANtern"; Flags: nowait postinstall skipifsilent; Tasks: launch
+Filename: "{app}\LANtern.exe"; Description: "LANtern'ı çalıştır / Launch LANtern"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM LANtern.exe"; Flags: runhidden waituntilterminated; RunOnceId: "StopHost"

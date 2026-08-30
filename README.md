@@ -11,7 +11,7 @@
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows-0078D4">
   <img alt=".NET" src="https://img.shields.io/badge/.NET-8-512BD4">
   <img alt="Streaming" src="https://img.shields.io/badge/streaming-WebRTC-FFB000">
-  <img alt="Release" src="https://img.shields.io/badge/release-v0.1.3--alpha-orange">
+  <img alt="Release" src="https://img.shields.io/badge/release-v0.1.4--alpha-orange">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
 </p>
 
@@ -27,6 +27,8 @@ An existing physical monitor can also be streamed when a virtual display is not 
 ## Install LANtern
 
 Download `LANtern-Setup-x64.exe` from [GitHub Releases](https://github.com/VolkanDemir74/LANtern/releases) and run it as an administrator. The installer includes the Windows host, browser interface, FFmpeg, MediaMTX, virtual display service, and development-signed driver.
+
+The setup wizard asks only once, on its final page, whether LANtern should be launched after installation.
 
 After installation:
 
@@ -46,6 +48,8 @@ The viewing device only needs a current web browser and access to the same priva
 - Browser-based viewing with no client installation
 - Low-latency WebRTC video over the local network
 - H.264 hardware encoding with NVIDIA NVENC support
+- Automatic runtime encoder detection with NVENC, Quick Sync, AMD, and software fallback
+- Optional mouse-cursor capture across all encoder paths
 - Live encoder FPS, speed, dropped-frame, and duplicated-frame telemetry
 - Intel Quick Sync, AMD AMF, and software H.264 fallback paths
 - 1080p at up to 60 FPS streaming profile

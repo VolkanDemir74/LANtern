@@ -45,8 +45,11 @@ public sealed class StreamCoordinator : IDisposable
         if (request.DisplayIndex < 0 || request.DisplayIndex >= displays.Count) return Fail("Geçersiz ekran seçimi.");
         SelectedDisplay = displays[request.DisplayIndex];
 
-        var available = await _ffmpeg.GetEncodersAsync(executable, ct);
-        ActiveEncoder = ChooseEncoder(request.Encoder, available);
+        var available = await _ffmpeg.GetUsableEncodersAsync(executable, ct);
+        var selectedEncoder = ChooseEncoder(request.Encoder, available);
+        if (selectedEncoder is null)
+            return Fail($"Seçilen video kodlayıcı ({request.Encoder}) bu bilgisayarda kullanılamıyor. Otomatik kodlayıcıyı deneyin.");
+        ActiveEncoder = selectedEncoder;
         var gateway = await _mediaMtx.StartAsync();
         if (!gateway.Success) return Fail(gateway.Message);
 
@@ -89,7 +92,10 @@ public sealed class StreamCoordinator : IDisposable
             await process.WaitForExitAsync();
             if (process.ExitCode != 0)
             {
-                LastError = "Video kodlayıcı beklenmedik biçimde kapandı. Ayrıntılar uygulama konsoluna yazıldı.";
+                var details = string.Join(" | ", recentErrors.Where(line => !string.IsNullOrWhiteSpace(line)).TakeLast(3));
+                LastError = string.IsNullOrWhiteSpace(details)
+                    ? $"Video kodlayıcı ({ActiveEncoder}) beklenmedik biçimde kapandı."
+                    : $"Video kodlayıcı ({ActiveEncoder}) başlatılamadı: {details}";
                 _logger.LogError("FFmpeg hata çıktısı: {Error}", string.Join(Environment.NewLine, recentErrors));
             }
         }
@@ -122,10 +128,10 @@ public sealed class StreamCoordinator : IDisposable
         }
     }
 
-    private static string ChooseEncoder(string requested, IReadOnlyList<string> available)
+    private static string? ChooseEncoder(string requested, IReadOnlyList<string> available)
     {
-        if (!string.Equals(requested, "auto", StringComparison.OrdinalIgnoreCase) && available.Contains(requested)) return requested;
-        return available.FirstOrDefault() ?? "libx264";
+        if (string.Equals(requested, "auto", StringComparison.OrdinalIgnoreCase)) return available.FirstOrDefault();
+        return available.Contains(requested) ? requested : null;
     }
 
     private static string BuildArguments(DisplayInfo display, StartStreamRequest request, string encoder, string publisherUrl)
@@ -150,7 +156,7 @@ public sealed class StreamCoordinator : IDisposable
         }
 
         // Compatibility fallback for software encoders and resized captures.
-        var input = $"-f gdigrab -draw_mouse 0 -framerate {request.Fps} -offset_x {display.X} -offset_y {display.Y} -video_size {display.Width}x{display.Height} -i desktop";
+        var input = $"-f gdigrab -draw_mouse {(request.CaptureCursor ? 1 : 0)} -framerate {request.Fps} -offset_x {display.X} -offset_y {display.Y} -video_size {display.Width}x{display.Height} -i desktop";
         var scale = string.Equals(request.ScalingMode, "fit", StringComparison.OrdinalIgnoreCase)
             ? $"-vf scale={request.Width}:{request.Height}:force_original_aspect_ratio=decrease,pad={request.Width}:{request.Height}:(ow-iw)/2:(oh-ih)/2"
             : $"-vf scale={request.Width}:{request.Height}:force_original_aspect_ratio=increase,crop={request.Width}:{request.Height}";

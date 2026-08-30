@@ -1,20 +1,24 @@
-# LANtern v0.1.3-alpha
+# LANtern v0.1.4-alpha
 
-This alpha update stabilizes the 1080p streaming profile and fixes shutdown cleanup from the system tray.
+This alpha update improves compatibility across different GPUs and simplifies first-time installation.
 
-## Streaming improvements
+## Encoder compatibility
 
-- The H.264 keyframe interval is now one second instead of four keyframes per second, reducing periodic bitrate and frame-time spikes.
-- NVIDIA NVENC now uses the balanced `p3` ultra-low-latency preset.
-- NVENC multipass is disabled and frame output delay is set to zero.
-- The bitrate buffer has been adjusted for smoother 1080p60 delivery.
-- The control panel now displays encoder FPS, processing speed, dropped frames, and duplicated frames.
+- Automatic encoder selection now performs a real test encode instead of relying only on the FFmpeg encoder list.
+- LANtern tries NVIDIA NVENC, Intel Quick Sync, AMD AMF, and software H.264 in preference order.
+- Computers without a supported hardware encoder now fall back to software H.264 automatically.
+- Manually selecting an unavailable encoder now produces a clear message in the control panel.
+- FFmpeg startup failures are shown in the control panel instead of referring to a hidden console.
 
-## Shutdown fixes
+## Cursor capture
 
-- Exiting from the tray no longer blocks the tray interface while disconnecting the virtual monitor.
-- Streaming, virtual-display, WebRTC, and child-process cleanup now run in an orderly asynchronous shutdown service.
-- Cleanup operations have bounded timeouts so one component cannot leave LANtern stuck during exit.
+- The **Show mouse cursor** setting now works with Intel Quick Sync, AMD AMF, and software H.264 capture paths.
+- Cursor visibility remains configurable for every encoder.
+
+## Installer
+
+- The setup wizard now asks only once whether LANtern should launch after installation.
+- The installer remains self-contained and includes the host, FFmpeg, MediaMTX, virtual-display service, and development-signed driver.
 
 ## Important notes
 
@@ -25,4 +29,4 @@ This alpha update stabilizes the 1080p streaming profile and fixes shutdown clea
 - A production-signed driver will be required for a stable public release.
 
 Please report problems through GitHub Issues and include the Windows version,
-GPU model, browser, selected streaming profile, and the encoder telemetry shown in the control panel.
+GPU model, browser, selected encoder, and any error shown in the control panel.
