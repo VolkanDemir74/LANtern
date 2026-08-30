@@ -1,6 +1,10 @@
-# LANtern v0.1.0-alpha
+# LANtern v0.1.1-alpha
 
-This is the first public developer preview of LANtern.
+This alpha update improves the installed desktop experience.
+
+## Fixed
+
+- LANtern now starts as a Windows tray application without opening a command window.
 
 ## Included
 
