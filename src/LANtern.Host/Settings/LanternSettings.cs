@@ -6,6 +6,7 @@ public sealed class LanternSettings
     public bool AutoConnectVirtualDisplay { get; set; }
     public bool AutoStartStream { get; set; }
     public bool AutoStartWhenMonitorConnect { get; set; } = true;
+    public bool AutoRecoverStream { get; set; } = true;
     public bool StartInTray { get; set; }
     public bool CheckForUpdates { get; set; } = true;
     public string SkippedUpdateVersion { get; set; } = "";

@@ -1,20 +1,23 @@
-# LANtern v0.1.7-alpha
+# LANtern v0.1.8-alpha
 
-This hotfix improves the complete update experience from discovery through relaunch.
+This alpha release improves stream resilience and makes the running application version visible throughout the interface.
 
-## Fixed
+## Stream recovery
 
-- When LANtern starts in the system tray and finds an update, it now opens the control panel so the update dialog is visible.
-- Update downloads now display real byte-based progress, followed by verification and installer-launch stages.
-- Silent automatic updates now relaunch the installed LANtern application after setup finishes.
-- The relaunched application runs as the original desktop user instead of retaining installer elevation.
+- Added an optional setting to restart streaming after an unexpected capture-process stop.
+- LANtern remembers the last successful display and streaming profile for recovery.
+- Recovery retries begin after a short delay and back off to a maximum interval of 15 seconds when failures continue.
+- Manual stream stop, virtual-monitor disconnection, and application shutdown cancel recovery immediately.
 
-## Installation behavior
+## Version visibility
 
-LANtern downloads the official installer and checksum, verifies SHA-256, requests Windows administrator approval, installs silently, and relaunches automatically. The Windows UAC approval still requires user confirmation.
+- The running version is displayed in the lower-left corner of the control panel.
+- The tray About dialog now displays the same assembly version.
+- Native control-panel URLs include the application version so WebView2 cannot reuse stale interface files after an update.
 
 ## Important notes
 
+- Borderless fullscreen remains recommended for uninterrupted capture. Exclusive fullscreen transitions can invalidate Windows Desktop Duplication and trigger automatic recovery.
 - This release is intended for testing on trusted private networks.
 - The included virtual display driver uses a development certificate.
 - Windows and SmartScreen may show an unknown publisher warning.

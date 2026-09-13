@@ -12,8 +12,8 @@
     <AssemblyTitle>LANtern</AssemblyTitle>
     <Product>LANtern</Product>
     <Description>Your screen, anywhere on your LAN.</Description>
-    <Version>0.1.7-alpha</Version>
-    <FileVersion>0.1.7.0</FileVersion>
+    <Version>0.1.8-alpha</Version>
+    <FileVersion>0.1.8.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

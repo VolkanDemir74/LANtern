@@ -15,6 +15,8 @@ Object.assign(text.tr, {controlPanelClient:'Yönetim paneli istemcisi',clientNat
 Object.assign(text.en, {controlPanelClient:'Control panel client',clientNative:'Native (recommended)',viewerEmpty:'Start streaming to preview'});
 Object.assign(text.tr, {generalSettings:'Genel',startupAutomation:'Başlangıç ve otomasyon',startWithWindows:"Windows açıldığında LANtern'ı çalıştır",startInTray:"LANtern'ı panel açmadan tray'de başlat",autoConnectMonitor:'LANtern açıldığında sanal monitörü bağla',autoStartStream:'LANtern açıldığında seçili ekranın yayınını başlat',autoStartOnMonitorConnect:'Panelden sanal monitör bağlanınca yayınını da başlat',settingsNote:'Başlangıç yayını, ana panelde son seçilen ekranı ve yukarıdaki yayın profilini kullanır.'});
 Object.assign(text.en, {generalSettings:'General',startupAutomation:'Startup and automation',startWithWindows:'Run LANtern when Windows starts',startInTray:'Start LANtern in the tray without opening the panel',autoConnectMonitor:'Connect the virtual monitor when LANtern starts',autoStartStream:'Stream the selected display when LANtern starts',autoStartOnMonitorConnect:'Also start streaming when the virtual monitor is connected from the panel',settingsNote:'Startup streaming uses the last display selected in the main panel and the profile above.'});
+Object.assign(text.tr, {autoRecoverStream:'Beklenmedik durumda yayını yeniden başlat'});
+Object.assign(text.en, {autoRecoverStream:'Restart streaming after an unexpected stop'});
 const t = key => text[lang][key];
 
 function applyLanguage() {
@@ -33,6 +35,7 @@ function applyLanguage() {
 }
 
 function renderStatus(app) {
+  $('appVersion').textContent=app.version?`v${app.version}`:'';
   $('state').textContent = app.running ? t('on') : t('off');
   const oldDisplay = $('display').value;
   $('display').innerHTML = app.displays.map(d => `<option value="${d.index}">${d.name} — ${d.width}×${d.height}${d.primary ? ` (${t('primary')})` : ''}</option>`).join('');
@@ -79,6 +82,7 @@ async function loadSettings() {
   $('fps').value=String(value.fps); $('bitrate').value=String(value.bitrateKbps);
   $('encoder').value=value.encoder; $('scalingMode').value=value.scalingMode;
   $('captureCursor').checked=value.captureCursor; $('startWithWindows').checked=value.startWithWindows;
+  $('autoRecoverStream').checked=value.autoRecoverStream;
   $('autoConnectMonitor').checked=value.autoConnectVirtualDisplay; $('autoStartOnMonitorConnect').checked=value.autoStartWhenMonitorConnect; $('autoStartStream').checked=value.autoStartStream;
   $('startInTray').checked=value.startInTray;
   $('checkForUpdates').checked=value.checkForUpdates;
@@ -95,7 +99,7 @@ async function saveSettings() {
     autoStartStream:$('autoStartStream').checked,autoStartWhenMonitorConnect:$('autoStartOnMonitorConnect').checked,startInTray:$('startInTray').checked,
     checkForUpdates:$('checkForUpdates').checked,skippedUpdateVersion:loadedSettings?.skippedUpdateVersion||'',controlPanelClient:$('controlPanelClient').value,
     preferredDisplayName:selected?.name||'',width,height,fps:Number($('fps').value),bitrateKbps:Number($('bitrate').value),
-    encoder:$('encoder').value,scalingMode:$('scalingMode').value,captureCursor:$('captureCursor').checked};
+    encoder:$('encoder').value,scalingMode:$('scalingMode').value,captureCursor:$('captureCursor').checked,autoRecoverStream:$('autoRecoverStream').checked};
   const response=await fetch('/api/settings',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(value)});
   if(response.status===403){$('info').textContent=t('localOnly');return;}
   if(!response.ok){$('info').textContent=t('monitorFailed');return;}

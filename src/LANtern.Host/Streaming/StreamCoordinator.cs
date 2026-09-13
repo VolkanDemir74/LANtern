@@ -13,9 +13,13 @@ public sealed class StreamCoordinator : IDisposable
     private readonly ILogger<StreamCoordinator> _logger;
     private readonly MediaMtxService _mediaMtx;
     private readonly ChildProcessJob _job;
+    private readonly SemaphoreSlim _operationGate = new(1, 1);
     private Process? _process;
+    private StartStreamRequest? _lastRequest;
+    private bool _shouldBeRunning;
 
     public bool IsRunning => _process is { HasExited: false };
+    public bool ShouldBeRunning => Volatile.Read(ref _shouldBeRunning);
     public DisplayInfo? SelectedDisplay { get; private set; }
     public string ActiveEncoder { get; private set; } = "Başlatılmadı";
     public string? LastError { get; private set; }
@@ -30,7 +34,24 @@ public sealed class StreamCoordinator : IDisposable
 
     public async Task<OperationResult> StartAsync(StartStreamRequest request, CancellationToken ct)
     {
-        await StopAsync();
+        await _operationGate.WaitAsync(ct);
+        try
+        {
+            Volatile.Write(ref _shouldBeRunning, false);
+            await StopProcessAsync();
+            var result = await StartCoreAsync(request, ct);
+            if (result.Success)
+            {
+                _lastRequest = request;
+                Volatile.Write(ref _shouldBeRunning, true);
+            }
+            return result;
+        }
+        finally { _operationGate.Release(); }
+    }
+
+    private async Task<OperationResult> StartCoreAsync(StartStreamRequest request, CancellationToken ct)
+    {
         _job.StopOrphanedLANternProcesses();
         LastError = null;
         Interlocked.Exchange(ref _receivedPackets, 0);
@@ -68,6 +89,32 @@ public sealed class StreamCoordinator : IDisposable
     }
 
     public async Task StopAsync()
+    {
+        await _operationGate.WaitAsync();
+        try
+        {
+            Volatile.Write(ref _shouldBeRunning, false);
+            _lastRequest = null;
+            await StopProcessAsync();
+        }
+        finally { _operationGate.Release(); }
+    }
+
+    public async Task<OperationResult?> TryRecoverAsync(CancellationToken ct)
+    {
+        if (!ShouldBeRunning || IsRunning) return null;
+        await _operationGate.WaitAsync(ct);
+        try
+        {
+            if (!ShouldBeRunning || IsRunning || _lastRequest is not { } request) return null;
+            _logger.LogWarning("Yayın işlemi beklenmedik biçimde durdu; aynı profille yeniden başlatılıyor.");
+            await StopProcessAsync();
+            return await StartCoreAsync(request, ct);
+        }
+        finally { _operationGate.Release(); }
+    }
+
+    private async Task StopProcessAsync()
     {
         var process = Interlocked.Exchange(ref _process, null);
         if (process is { HasExited: false })

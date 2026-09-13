@@ -9,8 +9,9 @@ html, body { width: 100%; height: 100%; overflow: hidden; }
 body { margin: 0; }
 main { height: 100vh; min-height: 0; display: grid; grid-template-columns: 360px 1fr; overflow: hidden; }
 .panel {
+  position: relative;
   min-height: 0;
-  padding: 18px 20px;
+  padding: 18px 20px 38px;
   overflow-y: auto;
   background-color: #101827;
   background-image:
@@ -20,6 +21,7 @@ main { height: 100vh; min-height: 0; display: grid; grid-template-columns: 360px
   background-position: 0 0, 4px 4px;
   border-right: 1px solid #273246;
 }
+.app-version { position: absolute; left: 20px; bottom: 11px; color: #607089; font-size: 11px; user-select: text; }
 header { margin-bottom: 14px; }
 .brand { position: relative; }
 .brand img { display: block; width: 100%; height: auto; }
@@ -117,6 +119,7 @@ dialog::backdrop { background: #02050acc; backdrop-filter: blur(3px); }
   html, body { height: auto; overflow: auto; }
   main { display: flex; min-height: 100dvh; flex-direction: column; }
   .panel { padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 14px max(14px, env(safe-area-inset-left)); border: 0; }
+  .app-version { position: static; display: block; margin-top: 12px; text-align: left; }
   header { margin-bottom: 14px; }
   .brand img { width: 100%; }
   header p { display: flex; }

@@ -11,7 +11,7 @@
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows-0078D4">
   <img alt=".NET" src="https://img.shields.io/badge/.NET-8-512BD4">
   <img alt="Streaming" src="https://img.shields.io/badge/streaming-WebRTC-FFB000">
-  <img alt="Release" src="https://img.shields.io/badge/release-v0.1.7--alpha-orange">
+  <img alt="Release" src="https://img.shields.io/badge/release-v0.1.8--alpha-orange">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
 </p>
 
@@ -83,6 +83,7 @@ The viewing device only needs a current web browser and access to the same priva
 - Automatic virtual-monitor connection and stream startup
 - Child-process cleanup for FFmpeg and MediaMTX
 - Clean stream restart and shutdown without stale FFmpeg pipe errors
+- Optional automatic recovery when the capture process stops unexpectedly
 
 ## More than screen sharing
 

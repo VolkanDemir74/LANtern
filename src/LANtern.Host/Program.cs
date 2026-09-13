@@ -21,6 +21,7 @@ builder.Services.AddSingleton<DisplayCatalog>();
 builder.Services.AddSingleton<FfmpegLocator>();
 builder.Services.AddSingleton<ChildProcessJob>();
 builder.Services.AddSingleton<StreamCoordinator>();
+builder.Services.AddHostedService<StreamRecoveryService>();
 builder.Services.AddSingleton<MediaMtxService>();
 builder.Services.AddSingleton<VirtualDisplayManager>();
 builder.Services.AddSingleton<LanternSettingsService>();
@@ -38,8 +39,9 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseWebSockets();
 
-app.MapGet("/api/status", (LanAddressService lan, DisplayCatalog displays, StreamCoordinator stream, VirtualDisplayManager virtualDisplay) => Results.Ok(new
+app.MapGet("/api/status", (LanAddressService lan, DisplayCatalog displays, StreamCoordinator stream, VirtualDisplayManager virtualDisplay, UpdateService updates) => Results.Ok(new
 {
+    version = updates.CurrentVersion,
     running = stream.IsRunning,
     url = lan.GetDisplayUrl(app.Configuration.GetValue("Server:Port", 5000)),
     addresses = lan.GetPrivateLanAddresses(),

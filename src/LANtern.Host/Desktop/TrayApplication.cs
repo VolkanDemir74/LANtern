@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using LANtern.Host.Streaming;
 using LANtern.Host.VirtualDisplay;
@@ -192,7 +193,7 @@ public sealed class TrayApplication : IHostedService, IDisposable
             return;
         }
         var port = _configuration.GetValue("Server:Port", 5000);
-        var address = new Uri($"http://127.0.0.1:{port}/admin.html");
+        var address = new Uri($"http://127.0.0.1:{port}/admin.html?v={Uri.EscapeDataString(GetVersion())}");
         var settings = await _settings.GetAsync();
         if (settings.ControlPanelClient is "chrome" or "edge")
         {
@@ -274,8 +275,9 @@ public sealed class TrayApplication : IHostedService, IDisposable
 
     private static void ShowAbout()
     {
+        var version = GetVersion();
         MessageBox.Show(
-            "LANtern\n\n" +
+            $"LANtern v{version}\n\n" +
             "Yerel ağınızda ekran paylaşımı için açık kaynak bir projedir.\n" +
             "Geliştirici: Volkan Demir\n\n" +
             "An open-source project for screen sharing on your local network.\n" +
@@ -284,6 +286,10 @@ public sealed class TrayApplication : IHostedService, IDisposable
             MessageBoxButtons.OK,
             MessageBoxIcon.Information);
     }
+
+    private static string GetVersion() => typeof(TrayApplication).Assembly
+        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+        .InformationalVersion.Split('+')[0] ?? "0.0.0";
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
