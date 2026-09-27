@@ -21,8 +21,10 @@ public sealed class VirtualDisplayManager
         get
         {
             using var searcher = new ManagementObjectSearcher(
-                "SELECT DeviceID FROM Win32_PnPEntity WHERE DeviceID LIKE 'SWD%LANTERNVIRTUALDISPLAY%'");
-            return searcher.Get().Count > 0;
+                "SELECT DeviceID, ConfigManagerErrorCode FROM Win32_PnPEntity WHERE DeviceID LIKE 'SWD%LANTERNVIRTUALDISPLAY%'");
+            using var devices = searcher.Get();
+            return devices.Cast<ManagementObject>().Any(device =>
+                Convert.ToUInt32(device["ConfigManagerErrorCode"] ?? uint.MaxValue) == 0);
         }
     }
 
@@ -32,8 +34,9 @@ public sealed class VirtualDisplayManager
         var serviceResult = await SendServiceCommandAsync("CONNECT");
         if (serviceResult is not null)
         {
-            await Task.Delay(1200);
-            return IsConnected ? new(true, "Sanal monitör bağlandı.") : new(false, serviceResult);
+            if (await WaitForConnectionStateAsync(true, TimeSpan.FromSeconds(10)))
+                return new(true, "Sanal monitör bağlandı.");
+            return new(false, GetConnectionFailureMessage(serviceResult));
         }
         var helper = FindHelper();
         if (helper is null) return new(false, "Sanal monitör başlatıcısı bulunamadı.");
@@ -46,8 +49,9 @@ public sealed class VirtualDisplayManager
                 Verb = "runas",
                 WindowStyle = ProcessWindowStyle.Hidden
             });
-            await Task.Delay(1800);
-            return IsConnected ? new(true, "Sanal monitör bağlandı.") : new(false, "Sanal monitör bağlanamadı.");
+            return await WaitForConnectionStateAsync(true, TimeSpan.FromSeconds(10))
+                ? new(true, "Sanal monitör bağlandı.")
+                : new(false, GetConnectionFailureMessage("Sanal monitör bağlanamadı."));
         }
         catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 1223)
         {
@@ -65,8 +69,9 @@ public sealed class VirtualDisplayManager
         var serviceResult = await SendServiceCommandAsync("DISCONNECT");
         if (serviceResult is not null)
         {
-            await Task.Delay(700);
-            return IsConnected ? new(false, "Sanal monitör kapatılamadı.") : new(true, "Sanal monitör kapatıldı.");
+            return await WaitForConnectionStateAsync(false, TimeSpan.FromSeconds(5))
+                ? new(true, "Sanal monitör kapatıldı.")
+                : new(false, "Sanal monitör kapatılamadı.");
         }
         using var stopEvent = OpenEvent(EventModifyState, false, StopEventName);
         if (!stopEvent.IsInvalid) SetEvent(stopEvent);
@@ -85,6 +90,39 @@ public sealed class VirtualDisplayManager
         }
         await Task.Delay(500);
         return IsConnected ? new(false, "Sanal monitör kapatılamadı.") : new(true, "Sanal monitör kapatıldı.");
+    }
+
+    private async Task<bool> WaitForConnectionStateAsync(bool connected, TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+        do
+        {
+            if (IsConnected == connected) return true;
+            await Task.Delay(250);
+        } while (DateTime.UtcNow < deadline);
+        return IsConnected == connected;
+    }
+
+    private string GetConnectionFailureMessage(string fallback)
+    {
+        try
+        {
+            using var searcher = new ManagementObjectSearcher(
+                "SELECT ConfigManagerErrorCode FROM Win32_PnPEntity WHERE DeviceID LIKE 'SWD%LANTERNVIRTUALDISPLAY%'");
+            using var devices = searcher.Get();
+            var device = devices.Cast<ManagementObject>().FirstOrDefault();
+            if (device is not null)
+            {
+                var problemCode = Convert.ToUInt32(device["ConfigManagerErrorCode"] ?? uint.MaxValue);
+                if (problemCode != 0 && problemCode != uint.MaxValue)
+                    return $"Sanal monitör sürücüsü başlatılamadı (Aygıt Yöneticisi kodu: {problemCode}).";
+            }
+        }
+        catch (ManagementException ex)
+        {
+            _logger.LogWarning("Sanal monitör aygıt durumu okunamadı: {Message}", ex.Message);
+        }
+        return fallback.StartsWith("OK", StringComparison.OrdinalIgnoreCase) ? "Sanal monitör Windows tarafından başlatılamadı." : fallback;
     }
 
     private async Task<string?> SendServiceCommandAsync(string command)

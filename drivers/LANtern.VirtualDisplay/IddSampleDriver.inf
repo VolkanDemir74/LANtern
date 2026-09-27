@@ -10,12 +10,12 @@ Class = Display
 ClassVer = 2.0
 Provider=%ManufacturerName%
 CatalogFile=IddSampleDriver.cat
-DriverVer= ; TODO: set DriverVer in stampinf property pages
+DriverVer=09/27/2026,0.1.9.0
 
 [Manufacturer]
-%ManufacturerName%=Standard,NT$ARCH$.10.0...22000
+%ManufacturerName%=Standard,NT$ARCH$.10.0...19041
 
-[Standard.NT$ARCH$.10.0...22000]
+[Standard.NT$ARCH$.10.0...19041]
 %DeviceName%=MyDevice_Install, Root\LANternVirtualDisplay
 %DeviceName%=MyDevice_Install, LANternVirtualDisplay
 

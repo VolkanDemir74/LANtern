@@ -7,6 +7,7 @@ sanal ekran surucusunu icerir.
 - Tek monitor modu 1920x1080 @ 60 Hz'dir.
 - Aygit adi `LANtern Virtual Monitor` olarak gorunur.
 - Surucu video kodlamaz; Host uygulamasi ekrani normal monitor gibi yakalar.
+- Windows 10 surum 2004 (build 19041) ve sonraki surumlerle, Windows 11 dahil, uyumludur.
 
 Derleme icin Visual Studio 2026, Windows SDK 10.0.28000 ve WDK 10.0.28000
 gereklidir. Gelistirme surucusunun kurulumu test imzalama veya uygun bir surucu

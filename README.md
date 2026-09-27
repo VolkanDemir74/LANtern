@@ -11,7 +11,7 @@
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows-0078D4">
   <img alt=".NET" src="https://img.shields.io/badge/.NET-8-512BD4">
   <img alt="Streaming" src="https://img.shields.io/badge/streaming-WebRTC-FFB000">
-  <img alt="Release" src="https://img.shields.io/badge/release-v0.1.8--alpha-orange">
+  <img alt="Release" src="https://img.shields.io/badge/release-v0.1.9--alpha-orange">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
 </p>
 
@@ -135,7 +135,7 @@ The ASP.NET Core host serves the viewer and control panel on the local network. 
 
 ### Installed application
 
-- Windows 10 version 1903 or newer, or Windows 11
+- Windows 10 version 2004 (build 19041) or newer, including Windows 10 22H2, or Windows 11
 - x64 processor
 - A current Chrome, Edge, Safari, or Firefox browser on the viewing device
 - A Windows network profile configured as **Private**
