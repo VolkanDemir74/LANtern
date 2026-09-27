@@ -10,7 +10,7 @@ Class = Display
 ClassVer = 2.0
 Provider=%ManufacturerName%
 CatalogFile=IddSampleDriver.cat
-DriverVer=09/27/2026,0.1.9.0
+DriverVer=09/27/2026,0.1.10.0
 
 [Manufacturer]
 %ManufacturerName%=Standard,NT$ARCH$.10.0...19041
@@ -28,13 +28,9 @@ IddSampleDriver.dll=1
 ; =================== UMDF Device ==================================
 
 [MyDevice_Install.NT]
-Include=WUDFRD.inf
-Needs=WUDFRD.NT
 CopyFiles=UMDriverCopy
 
 [MyDevice_Install.NT.hw]
-Include=WUDFRD.inf
-Needs=WUDFRD.NT.HW
 AddReg = MyDevice_HardwareDeviceSettings
 
 [MyDevice_HardwareDeviceSettings]
@@ -42,8 +38,14 @@ HKR,, "UpperFilters",  %REG_MULTI_SZ%, "IndirectKmd"
 HKR, "WUDF", "DeviceGroupId", %REG_SZ%, "LANternVirtualDisplayGroup"
 
 [MyDevice_Install.NT.Services]
-Include=WUDFRD.inf
-Needs=WUDFRD.NT.Services
+AddService=WUDFRd,0x000001fa,WUDFRD_ServiceInstall
+
+[WUDFRD_ServiceInstall]
+DisplayName=%WudfRdDisplayName%
+ServiceType=1
+StartType=3
+ErrorControl=1
+ServiceBinary=%12%\WUDFRd.sys
 
 [MyDevice_Install.NT.Wdf]
 UmdfService=IddSampleDriver,IddSampleDriver_Install
@@ -67,6 +69,7 @@ IddSampleDriver.dll
 ManufacturerName="LANtern"
 DiskName = "LANtern Virtual Display Installation Disk"
 DeviceName="LANtern Virtual Monitor"
+WudfRdDisplayName="Windows Driver Foundation - User-mode Driver Framework Reflector"
 
 REG_MULTI_SZ  = 0x00010000
 REG_SZ        = 0x00000000

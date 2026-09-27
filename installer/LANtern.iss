@@ -1,5 +1,5 @@
 #define MyAppName "LANtern"
-#define MyAppVersion "0.1.9"
+#define MyAppVersion "0.1.10"
 #define MyAppPublisher "Volkan Demir"
 #define MyAppURL "https://github.com/VolkanDemir74"
 #define StageDir "..\artifacts\installer-stage"
@@ -46,6 +46,7 @@ Name: "{autodesktop}\LANtern"; Filename: "{app}\LANtern.exe"; Tasks: desktopicon
 [Run]
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM LANtern.exe"; Flags: runhidden waituntilterminated; StatusMsg: "Eski LANtern işlemleri kapatılıyor..."; Check: IsUpgrade
 Filename: "{app}\LANtern.DeviceService.exe"; Parameters: "--uninstall"; Flags: runhidden waituntilterminated; Check: IsUpgrade
+Filename: "{sys}\pnputil.exe"; Parameters: "/remove-device ""SWD\LANternVirtualDisplay\LANternVirtualDisplay"""; Flags: runhidden waituntilterminated; StatusMsg: "Eski LANtern sanal monitör aygıtı kaldırılıyor..."; Check: IsUpgrade
 Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\Uninstall-LANternDriver.ps1"""; Flags: runhidden waituntilterminated; StatusMsg: "Eski LANtern sanal monitör sürücüsü kaldırılıyor..."; Check: IsUpgrade
 #ifdef DevelopmentDriver
 Filename: "{sys}\certutil.exe"; Parameters: "-f -addstore Root ""{app}\driver\LANtern-Test.cer"""; Flags: runhidden waituntilterminated
